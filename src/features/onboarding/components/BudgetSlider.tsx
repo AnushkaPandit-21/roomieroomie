@@ -4,11 +4,9 @@ import { View } from 'react-native';
 import { Text } from '@/components/ui';
 import { colors } from '@/constants/theme';
 
-import { BUDGET } from '../options';
+import { formatRupees } from '@/utils/format';
 
-export function formatRupees(value: number): string {
-  return `₹${value.toLocaleString('en-IN')}`;
-}
+import { BUDGET } from '../options';
 
 type BudgetSliderProps = {
   value: number | null;

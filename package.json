@@ -47,7 +47,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "doctor": "npx expo-doctor",
-    "test:e2e": "npx tsx scripts/e2e-onboarding.ts",
+    "test:e2e": "npx tsx scripts/e2e-onboarding.ts && npx tsx scripts/e2e-discover.ts",
     "test:db": "npx supabase test db"
   },
   "engines": {

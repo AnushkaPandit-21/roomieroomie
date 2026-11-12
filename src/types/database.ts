@@ -230,9 +230,12 @@ isOneToOne: false
           }
           Functions: {
             "get_feed":
-{ Args: { "p_cursor"?: string,"p_limit"?: number,"p_user_id": string }; Returns: {
+{ Args: { "p_areas"?: (string)[],"p_cursor"?: string,"p_limit"?: number,"p_max_budget"?: number,"p_move_in_by"?: string,"p_user_id": string }; Returns: {
               "age": number,"areas": (string)[],"bio": string,"city": string,"gender": Database["public"]['Enums']["gender"],"listing": Json,"match_score": number,"max_budget": number,"move_in_date": string,"name": string,"next_cursor": string,"occupation": string,"photos": Json,"preferences": Json,"profile_id": string,"prompts": Json,"rank_score": number,"seeking_type": Database["public"]['Enums']["seeking_type"]
             }[]
+                           },
+"touch_last_active":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            }
           }
           Enums: {

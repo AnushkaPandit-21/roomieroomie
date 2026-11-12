@@ -331,7 +331,10 @@ src/
   utils/          Small pure helpers (date.ts, cn.ts, math.ts)
   features/onboarding/  steps.ts (order + completeness), validation.ts, answers.ts, api.ts (Supabase I/O),
                         options.ts (choices + PROVISIONAL lists), image.ts (1080px WebP), components/
-scripts/          e2e-onboarding.ts — end-to-end onboarding test against the LOCAL stack (npx tsx …)
+  features/feed/  api.ts (get_feed paging + filters, like/pass, match check), card.ts (section order, chips),
+                  useFeed.ts (infinite query + optimistic like/pass), components/ (LikeSheet, FilterSheet, MatchModal)
+  components/profile/ProfileCard.tsx — reusable Hinge-style card (Discover, later Likes You / Matches)
+scripts/          e2e-onboarding.ts, e2e-discover.ts (+ e2e-helpers.ts) — end-to-end tests against the LOCAL stack (`npm run test:e2e`)
 supabase/
   migrations/     8 re-runnable migrations (tables, indexes, private helpers, RLS, swipes/match trigger, get_feed, storage, realtime)
   seed/           dev_seed.sql (200 fake profiles, dev/local only) + cleanup_seed.sql
@@ -396,6 +399,14 @@ _Record every owner-approved implementation decision here (date, decision, secti
   - Consequences vs the PDF: no verified phone numbers in v1 for now (§10); 18+ check unchanged (DOB step).
   - Profile tab has a Sign out button.
   - E2E test signs in email/password test users locally (Google can't be automated); same RLS-backed session.
+- 2026-11-13 — **ProfileCard + Discover (§11 step 5) built; decisions F1–F5 approved:**
+  - F1 `get_feed` gained three OPTIONAL narrowing filters (migration 09): `p_areas` (shares an area, incl. a host's listing area, case-insensitive), `p_max_budget` (budget = rent share for hosts), `p_move_in_by`. All null ⇒ identical to the original feed; hard filters and weights unchanged. Filters persist on the device.
+  - F2 A like that completes a mutual like shows an "It's a match" modal in Discover.
+  - F3 Daily-limit hit: banner "You've used today's 25 likes. More at midnight.", card stays, crossing still works. No remaining-likes counter.
+  - F4 Hosts show a "Has a room" panel (area, rent/mo, available from, occupancy, furnished, deposit) — never an address.
+  - F5 `touch_last_active()` RPC called on app open / foreground, max once an hour; a trigger clamps `last_active_at` to ≤ now().
+  - Card order: name/age/occupation + match % → photo 1 → lifestyle chips (budget/rent, area, food, smoking, drinking, move-in) → room panel (hosts) → prompt 1 → photos 2–3 → prompt 2 → photo 4 → prompt 3 → photos 5–6. Heart on every photo/prompt opens "Like with comment" (≤ 300 chars); floating ✕ bottom-left crosses.
+  - Feed: 20 per page, next page fetched when ≤ 3 cards remain; like/pass remove the card instantly and restore it if the server rejects.
 
 ## 16. Open questions (need owner input before the relevant step)
 - Logo (app icon and splash still use Expo's default images), and sign-off on the colours/fonts in §15.

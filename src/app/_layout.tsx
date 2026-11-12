@@ -17,6 +17,7 @@ import { colors } from '@/constants/theme';
 import { getOnboardingStatus } from '@/features/onboarding/steps';
 import { useOnboardingData } from '@/features/onboarding/useOnboardingData';
 import { useAuthListener } from '@/hooks/useAuthListener';
+import { useTouchLastActive } from '@/hooks/useTouchLastActive';
 import { queryClient } from '@/services/queryClient';
 import { useSessionStore } from '@/stores/sessionStore';
 
@@ -51,6 +52,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   const complete = onboarding.data ? getOnboardingStatus(onboarding.data).complete : false;
 
   const signedIn = !!session;
+  useTouchLastActive(signedIn && complete);
   const statusKnown = !signedIn || onboarding.isFetched;
   const ready = fontsReady && initialized && statusKnown;
 

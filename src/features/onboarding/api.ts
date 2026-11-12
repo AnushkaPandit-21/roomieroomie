@@ -2,14 +2,13 @@
 // React Native, so the same code runs in the app and in scripts/e2e-onboarding.ts.
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { isRemoteUrl, PHOTO_BUCKET } from '@/services/photos';
 import type { Database } from '@/types/database';
 
 import type { StepId } from './steps';
 import type { Answers, OnboardingData, PhotoRow } from './types';
 
 type Client = SupabaseClient<Database>;
-
-export const PHOTO_BUCKET = 'photos';
 
 function check<T>(result: { data: T; error: unknown }): T {
   if (result.error) throw result.error;
@@ -183,7 +182,7 @@ export async function uploadPhoto(
 
 export async function deletePhoto(client: Client, photo: PhotoRow): Promise<void> {
   check(await client.from('photos').delete().eq('id', photo.id));
-  if (!/^https?:\/\//.test(photo.url)) {
+  if (!isRemoteUrl(photo.url)) {
     await client.storage.from(PHOTO_BUCKET).remove([photo.url]);
   }
 }
@@ -191,18 +190,4 @@ export async function deletePhoto(client: Client, photo: PhotoRow): Promise<void
 export function nextPhotoPosition(photos: PhotoRow[], isRoomPhoto: boolean): number {
   const used = photos.filter((p) => p.is_room_photo === isRoomPhoto).map((p) => p.position);
   return used.length ? Math.max(...used) + 1 : 0;
-}
-
-// Signed URLs for private storage paths; full http(s) URLs (seed data) pass through unchanged.
-export async function signPhotoUrls(client: Client, paths: string[]): Promise<Record<string, string>> {
-  const result: Record<string, string> = {};
-  const storagePaths = paths.filter((p) => !/^https?:\/\//.test(p));
-  paths.filter((p) => /^https?:\/\//.test(p)).forEach((p) => (result[p] = p));
-  if (!storagePaths.length) return result;
-
-  const signed = check(await client.storage.from(PHOTO_BUCKET).createSignedUrls(storagePaths, 60 * 60));
-  signed?.forEach((s) => {
-    if (s.path && s.signedUrl) result[s.path] = s.signedUrl;
-  });
-  return result;
 }

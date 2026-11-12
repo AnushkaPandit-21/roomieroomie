@@ -7,9 +7,10 @@ import { Icon, IconButton, Text } from '@/components/ui';
 import { colors, radius } from '@/constants/theme';
 import { useResponsive } from '@/hooks/useResponsive';
 import { friendlyError } from '@/services/errors';
+import { signPhotoUrls } from '@/services/photos';
 import { getSupabase } from '@/services/supabase';
 
-import { deletePhoto, nextPhotoPosition, signPhotoUrls, uploadPhoto } from '../api';
+import { deletePhoto, nextPhotoPosition, uploadPhoto } from '../api';
 import { pickImages, prepareWebp } from '../image';
 import type { PhotoRow } from '../types';
 

@@ -5,120 +5,14 @@
 //
 //   npx supabase start
 //   SUPABASE_PUBLISHABLE_KEY=... SUPABASE_SECRET_KEY=... npx tsx scripts/e2e-onboarding.ts
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-
 import { answersFromData, emptyAnswers, mergeDraft } from '../src/features/onboarding/answers';
-import {
-  deletePhoto,
-  loadOnboarding,
-  nextPhotoPosition,
-  PHOTO_BUCKET,
-  saveStep,
-  signPhotoUrls,
-  uploadPhoto,
-} from '../src/features/onboarding/api';
+import { deletePhoto, loadOnboarding, nextPhotoPosition, saveStep, uploadPhoto } from '../src/features/onboarding/api';
 import { getOnboardingStatus, isStepDone, stepsFor, type StepId } from '../src/features/onboarding/steps';
-import type { Answers } from '../src/features/onboarding/types';
 import { validateDob, validateStep } from '../src/features/onboarding/validation';
-import type { Database } from '../src/types/database';
+import { PHOTO_BUCKET, signPhotoUrls } from '../src/services/photos';
 import { addDays, addYears, startOfToday, toISODate } from '../src/utils/date';
 
-const URL = process.env.SUPABASE_URL ?? 'http://127.0.0.1:54321';
-const KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
-const SECRET = process.env.SUPABASE_SECRET_KEY;
-
-if (!/127\.0\.0\.1|localhost/.test(URL)) throw new Error('Refusing to run against a non-local Supabase.');
-if (!KEY || !SECRET) throw new Error('Set SUPABASE_PUBLISHABLE_KEY and SUPABASE_SECRET_KEY (from `npx supabase status`).');
-
-// 1×1 WebP. Storage validates the declared content type, not pixels.
-const WEBP = Uint8Array.from(atob('UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAA='), (c) => c.charCodeAt(0));
-
-const admin = createClient<Database>(URL, SECRET, { auth: { persistSession: false } });
-let passed = 0;
-
-const assert = {
-  ok(condition: unknown, label: string) {
-    if (!condition) throw new Error(`Assertion failed: ${label}`);
-  },
-  equal(actual: unknown, expected: unknown, label: string) {
-    if (actual !== expected) throw new Error(`Assertion failed: ${label} (got ${String(actual)})`);
-  },
-  async rejects(promise: Promise<unknown>, label: string) {
-    try {
-      await promise;
-    } catch {
-      return;
-    }
-    throw new Error(`Expected rejection: ${label}`);
-  },
-};
-
-function ok(condition: unknown, label: string) {
-  assert.ok(condition, label);
-  passed += 1;
-  console.log(`  ✓ ${label}`);
-}
-
-const PASSWORD = 'e2e-Test-password-1';
-
-// Creates the user on first use, then signs in with a fresh client — like reopening the app.
-async function signIn(email: string): Promise<{ client: SupabaseClient<Database>; uid: string }> {
-  await admin.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
-  const client = createClient<Database>(URL, KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data, error } = await client.auth.signInWithPassword({ email, password: PASSWORD });
-  if (error || !data.user) throw error ?? new Error(`Sign-in failed for ${email}`);
-  return { client, uid: data.user.id };
-}
-
-async function deleteTestUser(email: string) {
-  const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  const user = data.users.find((u) => u.email === email);
-  if (!user) return;
-  const files = await admin.storage.from(PHOTO_BUCKET).list(user.id);
-  if (files.data?.length) await admin.storage.from(PHOTO_BUCKET).remove(files.data.map((f) => `${user.id}/${f.name}`));
-  await admin.auth.admin.deleteUser(user.id);
-}
-
-function scriptedAnswers(seeking: 'need_place' | 'have_place'): Answers {
-  const today = startOfToday();
-  return {
-    ...emptyAnswers(),
-    name: 'Test Meera',
-    dob: toISODate(addYears(today, -24)),
-    gender: 'female',
-    want_genders: ['female', 'non_binary'],
-    show_to_genders: ['female'],
-    city: 'Bengaluru',
-    areas: ['Koramangala', 'HSR Layout'],
-    seeking_type: seeking,
-    max_budget: 18000,
-    move_in_date: toISODate(addDays(today, 14)),
-    food: 'veg',
-    smoking: 'no',
-    drinking: 'okay',
-    sleep: 'early',
-    cleanliness: 4,
-    guests: 'sometimes',
-    pets: 'okay',
-    language: ['English', 'Hindi', 'Kannada'],
-    dealbreakers: ['smoking'],
-    occupation: 'Product Designer',
-    prompts: [
-      { question: 'My ideal Sunday at home looks like', answer: 'Chai and a long breakfast.' },
-      { question: 'The house rule I will never break', answer: 'Dishes done the same day.' },
-      { question: 'My roommate green flag is', answer: 'Replacing the milk.' },
-    ],
-    listing: {
-      area: 'Koramangala',
-      rent: 16000,
-      deposit: 32000,
-      available_from: toISODate(addDays(today, 10)),
-      occupancy: 2,
-      furnished: true,
-      amenities: ['WiFi', 'Washing machine'],
-    },
-  };
-}
+import { admin, assert, deleteTestUser, ok, passedCount, scriptedAnswers, signIn, WEBP } from './e2e-helpers';
 
 async function completeFlow(email: string, seeking: 'need_place' | 'have_place') {
   console.log(`\n${seeking} flow (${email})`);
@@ -251,7 +145,7 @@ async function main() {
   ok(sneaky.error, 'cannot upload into another user’s photo folder');
 
   for (const e of ['seeker', 'host', 'partial', 'other']) await deleteTestUser(`e2e-${e}@roomieroomie.test`);
-  console.log(`\nAll ${passed} checks passed; test users removed.`);
+  console.log(`\nAll ${passedCount()} checks passed; test users removed.`);
 }
 
 main().catch((error) => {

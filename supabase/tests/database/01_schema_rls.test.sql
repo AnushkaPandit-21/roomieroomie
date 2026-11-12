@@ -37,8 +37,8 @@ select ok(not has_column_privilege('authenticated', 'public.matches', 'created_a
 select ok(not has_column_privilege('authenticated', 'public.messages', 'body', 'update'), 'clients cannot edit message bodies');
 select ok(not has_table_privilege('authenticated', 'public.swipes', 'update'), 'swipes are immutable');
 select ok(not has_schema_privilege('anon', 'private', 'usage'), 'anon cannot use the private schema');
-select ok(not has_function_privilege('anon', 'public.get_feed(uuid, integer, text)', 'execute'), 'anon cannot call get_feed');
-select ok(has_function_privilege('authenticated', 'public.get_feed(uuid, integer, text)', 'execute'), 'authenticated can call get_feed');
+select ok(not has_function_privilege('anon', 'public.get_feed(uuid, integer, text, text[], integer, date)', 'execute'), 'anon cannot call get_feed');
+select ok(has_function_privilege('authenticated', 'public.get_feed(uuid, integer, text, text[], integer, date)', 'execute'), 'authenticated can call get_feed');
 
 select * from finish();
 rollback;
