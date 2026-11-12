@@ -2,15 +2,6 @@ import type { StepId } from './steps';
 
 type StepCopy = { overline?: string; title: string; subtitle?: string };
 
-export const PHONE_COPY: StepCopy = {
-  title: "What's your phone number?",
-  subtitle: "We'll text you a code to verify it.",
-};
-
-export const VERIFY_COPY: StepCopy = {
-  title: 'Enter your code',
-};
-
 export const STEP_COPY: Record<StepId, StepCopy> = {
   name_dob: { title: "What's your name?", subtitle: 'And your date of birth. You must be 18 or older.' },
   gender: { title: 'Which gender best describes you?' },

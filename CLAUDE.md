@@ -41,7 +41,7 @@ A native **iOS + Android** app built with **React Native (Expo)** on a **Supabas
 - **Hosts** — already have a room/flat and need someone to fill it. (`seeking_type = have_place`) They show up in the normal feed *and* in the Rooms tab.
 
 ### MVP must-haves
-- Phone-number sign-up, onboarding with at least 3 photos, max budget, area, move-in date and lifestyle preferences
+- Phone-number sign-up *(owner change 2026-11-13: Google sign-in for now — see §15)*, onboarding with at least 3 photos, max budget, area, move-in date and lifestyle preferences
 - Tinder-style gender controls: who you want to live with, and who your profile is shown to
 - Hinge-style Discover feed: one full profile at a time, Like (optionally on a specific photo/answer, with a comment) or Cross
 - Likes You, Matches + real-time chat, Rooms tab (replaces Standouts), Profile/edit
@@ -78,7 +78,7 @@ Five bottom tabs, mirroring Hinge's layout with Standouts swapped for Rooms: **D
 
 One question per screen, Hinge-style, **with a progress bar**. Exact order:
 
-1. Phone OTP
+1. Phone OTP *(owner change 2026-11-13: Google sign-in — see §15)*
 2. Name & date of birth (**18+**)
 3. Your gender
 4. Who you want to live with (`want_genders`, multi-select)
@@ -111,7 +111,7 @@ One TypeScript codebase for both phones, and a managed backend so we write almos
 | Mobile app | React Native + Expo (TypeScript), Expo Router | One codebase → iOS + Android; test instantly on your phone with Expo Go |
 | UI | NativeWind (Tailwind for RN), Reanimated, expo-image | Smooth Hinge-like animations, cached images |
 | State/data | TanStack Query + Zustand | Caching, pagination, optimistic likes |
-| Auth | Supabase Auth — phone OTP (via Twilio/MSG91) | Indian users expect phone login; cuts fake accounts |
+| Auth | Supabase Auth — phone OTP (via Twilio/MSG91) — *currently Google OAuth, see §15* | Indian users expect phone login; cuts fake accounts |
 | Database | Supabase Postgres + Row Level Security | Relational data (likes, matches) fits SQL; RLS = security without a server |
 | Photos | Supabase Storage + image transforms/CDN | Resize to ~1080px and serve thumbnails |
 | Chat | Supabase Realtime (Postgres changes / broadcast) | Live messages without running a socket server |
@@ -257,7 +257,7 @@ Expo push notifications for **new like, new match and new message**, via a Supab
 
 ## 10. Safety, privacy & trust (part of the MVP, not extras)
 
-- **Verified phone numbers** for every account; **18+ check** at sign-up.
+- **Verified phone numbers** for every account *(paused while login is Google-only — open question §16)*; **18+ check** at sign-up.
 - **No exact addresses** on listings before a match — show area/locality only.
 - **Report & block** on every profile and chat; reported users **auto-hidden after N reports** pending review.
 - **Photo moderation** — run uploads through a moderation API (or manual review at launch) to block nudity and non-person photos. (Runs in Edge Functions.)
@@ -340,6 +340,7 @@ supabase/
   README.md       how to apply via CLI or SQL editor
 ```
 
+- Supabase CLI 3.x commands target the LOCAL stack by default; use `--remote` for the linked hosted project (e.g. `npx supabase db push --remote`).
 - Database workflow: never edit an applied migration — add a new timestamped file. After any schema change run `npx supabase db reset`, `npx supabase test db`, `npx supabase db lint`, `npx supabase db advisors`, then regenerate `src/types/database.ts` (`npx supabase gen types --lang typescript --local --schema public > src/types/database.ts`).
 - Server-side helpers live in schema `private` (not exposed to the Data API). Client-callable functions go in `public` with explicit `grant execute ... to authenticated` and `revoke ... from anon`.
 - The Supabase client is typed: `SupabaseClient<Database>`.
@@ -382,20 +383,25 @@ _Record every owner-approved implementation decision here (date, decision, secti
   - D17 Seed users: `raw_app_meta_data.seed = true`, phones +91 99999 0xxxx, deterministic ids, placeholder photos; seed refuses to run with > 50 real users; separate dev and prod Supabase projects.
 
 - 2026-11-13 — **Auth + onboarding (§11 step 4) built, per the owner's numbered list:**
-  - Order: phone OTP → name & DOB (18+) → gender → want_genders → show_to_genders → city & areas → seeking/have place → max budget → move-in date (budget and move-in are **separate screens**) → lifestyle, one question per screen (food, smoking, drinking, sleep, cleanliness, guests, pets, **languages**) → dealbreakers (optional) → occupation → 3–6 photos → 3 prompts → hosts only: listing details → room photos.
+  - Order: sign-in → name & DOB (18+) → gender → want_genders → show_to_genders → city & areas → seeking/have place → max budget → move-in date (budget and move-in are **separate screens**) → lifestyle, one question per screen (food, smoking, drinking, sleep, cleanliness, guests, pets, **languages**) → dealbreakers (optional) → occupation → 3–6 photos → 3 prompts → hosts only: listing details → room photos.
   - `work/study` is not asked (owner's list omits it and there is no column); occupation covers it — pending confirmation (§16).
   - Each Continue saves that step to Supabase immediately (profile row is created at name & DOB). Photos are compressed (longest side ≤ 1080px, WebP quality 0.7) and uploaded the moment they're picked. A per-user draft is persisted locally (AsyncStorage) so Back and app restarts never lose answers; server answers win over the draft.
   - Reopening resumes at the first unanswered step. Root navigator uses `Stack.Protected`: signed out → `/phone`; incomplete → `/onboarding`; complete (all steps incl. ≥ 3 non-room photos and 3 prompts; hosts also listing + ≥ 1 room photo) → tabs.
-  - Phone numbers: India only (+91, 10 digits starting 6–9). OTP is 6 digits; resend after 60 s.
   - Switching a host back to `need_place` deletes their listing and room photos (listings are only for `have_place`).
   - Listing form: area from the city's list, rent (= rent share), deposit, available-from, occupancy chips 1–6, furnished yes/no, optional amenities. Room photos: 1–6 (minimum of 1 chosen by Claude — confirm).
   - SMS provider is configurable without app changes: Supabase Auth "Send SMS" hook → Edge Function `send-sms`, `SMS_PROVIDER=msg91|twilio`. Twilio may instead be set natively in Supabase Auth (no hook).
-  - Local dev: phone login uses fixed test numbers +91 99999 1000x (code 123456) from `supabase/config.toml`; the placeholder Twilio values there are local-only.
+- 2026-11-13 — **Login changed from phone OTP to Google sign-in (owner decision: SMS setup deferred).**
+  - Sign-in screen → "Continue with Google": Supabase OAuth in an in-app browser (`expo-web-browser`), works in Expo Go. Callback `auth/callback`; Supabase must allow redirect URLs `exp://**` (Expo Go) and `roomieroomie://**` (builds). `src/app/+native-intent.tsx` routes the callback to `/`.
+  - Phone screens and OTP code removed from the app. The `send-sms` hook (MSG91/Twilio) is kept in `supabase/functions/` for when phone verification returns; phone auth is disabled in the local config.
+  - Consequences vs the PDF: no verified phone numbers in v1 for now (§10); 18+ check unchanged (DOB step).
+  - Profile tab has a Sign out button.
+  - E2E test signs in email/password test users locally (Google can't be automated); same RLS-backed session.
 
 ## 16. Open questions (need owner input before the relevant step)
 - Logo (app icon and splash still use Expo's default images), and sign-off on the colours/fonts in §15.
 - Dark mode: in scope for v1 or not (currently light only).
-- SMS provider for production: MSG91 (via the `send-sms` hook; needs DLT-approved OTP template) or Twilio (native or via the hook).
+- Phone verification (PDF §10 "verified phone numbers"): bring back before launch, e.g. as a verification step after Google sign-in? If so: MSG91 (hook, needs DLT template) or Twilio.
+- iOS: App Store guideline 4.8 requires **Sign in with Apple** (or an equivalent privacy-focused option) when Google login is offered — needed before App Store submission.
 - Launch city (PDF example: Bengaluru).
 - N = number of reports before a user is auto-hidden (needed for the review flow; `reports_blocks` already has `created_at`).
 - Rate-limit numbers for messages and reports (§9 requires them; likes are done).

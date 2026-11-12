@@ -162,7 +162,8 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# exp://** = Expo Go, roomieroomie://** = development/production builds (Google sign-in callback).
+additional_redirect_urls = ["https://127.0.0.1:3000", "exp://**", "roomieroomie://**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -261,9 +262,10 @@ otp_expiry = 3600
 # content_path = "./supabase/templates/password_changed_notification.html"
 
 [auth.sms]
+# Phone login is paused (owner decision 2026-11-13: Google sign-in instead).
 # Allow/disallow the phone provider. When false, users can't sign up or sign in with SMS.
 # To block new signups only, set enable_signup = false under [auth] instead.
-enabled = true
+enabled = false
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
 # Template for sending OTP to users
@@ -273,13 +275,8 @@ max_frequency = "5s"
 
 # Use pre-defined map of phone number to OTP for testing.
 # Keys are the phone number with country code and without the + prefix.
-# Local-only test numbers (fake range +91 99999 1xxxx): no SMS is sent, the code is always 123456.
-[auth.sms.test_otp]
-919999910001 = "123456"
-919999910002 = "123456"
-919999910003 = "123456"
-919999910004 = "123456"
-919999910005 = "123456"
+# [auth.sms.test_otp]
+# 14152127777 = "123456"
 
 # Configure logged in session timeouts.
 # [auth.sessions]
@@ -306,13 +303,12 @@ max_frequency = "5s"
 # secrets = "env(SEND_SMS_HOOK_SECRET)"
 
 # Configure one of the supported SMS providers: `twilio`, `twilio_verify`, `messagebird`, `textlocal`, `vonage`.
-# LOCAL ONLY: placeholder Twilio values so the local stack enables phone login for the test_otp
-# numbers above (those never send a real SMS). Real providers are configured in the hosted dashboard.
 [auth.sms.twilio]
-enabled = true
-account_sid = "local-placeholder"
-message_service_sid = "local-placeholder"
-auth_token = "local-placeholder"
+enabled = false
+account_sid = ""
+message_service_sid = ""
+# DO NOT commit your Twilio auth token to git. Use environment variable substitution instead:
+auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
 
 # Multi-factor-authentication is available to Supabase Pro plan.
 [auth.mfa]
@@ -354,6 +350,14 @@ url = ""
 skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
+
+# Google sign-in for the LOCAL stack. Off by default; to try it locally, create a Google OAuth client with
+# redirect URI http://127.0.0.1:54321/auth/v1/callback and put the values in supabase/.env.
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+skip_nonce_check = true
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.

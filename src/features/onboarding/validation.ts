@@ -4,18 +4,6 @@ import { BUDGET, CITIES, LIMITS, PHOTO_LIMITS, ROOM_PHOTO_LIMITS } from './optio
 import { countPhotos, type StepId } from './steps';
 import type { Answers, OnboardingData } from './types';
 
-// Indian mobile numbers: 10 digits starting 6–9. Returns E.164 (+91…) or null.
-export function normalizeIndianPhone(input: string): string | null {
-  let digits = input.replace(/\D/g, '');
-  if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
-  if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1);
-  return /^[6-9]\d{9}$/.test(digits) ? `+91${digits}` : null;
-}
-
-export function isValidOtp(code: string): boolean {
-  return /^\d{6}$/.test(code);
-}
-
 export function validateDob(dob: string | null): string | null {
   if (!isValidISODate(dob)) return 'Enter your date of birth.';
   if (parseISODate(dob) > startOfToday()) return 'Date of birth can’t be in the future.';

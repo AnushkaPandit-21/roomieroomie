@@ -16,16 +16,6 @@ function check<T>(result: { data: T; error: unknown }): T {
   return result.data;
 }
 
-export async function sendOtp(client: Client, phone: string): Promise<void> {
-  const { error } = await client.auth.signInWithOtp({ phone });
-  if (error) throw error;
-}
-
-export async function verifyOtp(client: Client, phone: string, token: string): Promise<void> {
-  const { error } = await client.auth.verifyOtp({ phone, token, type: 'sms' });
-  if (error) throw error;
-}
-
 export async function loadOnboarding(client: Client, userId: string): Promise<OnboardingData> {
   const [profile, preferences, photos, prompts, listing] = await Promise.all([
     client.from('profiles').select('*').eq('id', userId).maybeSingle(),

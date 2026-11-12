@@ -1,4 +1,4 @@
-// Onboarding order — CLAUDE.md §3. Phone OTP (step 1) happens on the auth screens before these.
+// Onboarding order — CLAUDE.md §3. Sign-in (step 1) happens on the auth screen before these.
 // Lifestyle is shown one question per screen. Listing + room photos only for have_place users.
 import type { SeekingType } from '@/types/domain';
 

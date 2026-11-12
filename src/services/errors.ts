@@ -9,17 +9,14 @@ export function friendlyError(error: unknown): string {
   if (/network request failed|failed to fetch|fetch failed/i.test(message)) {
     return 'You seem to be offline. Check your connection and try again.';
   }
-  if (code === 'otp_expired' || /token has expired or is invalid/i.test(message)) {
-    return 'That code is incorrect or has expired.';
-  }
-  if (code === 'over_sms_send_rate_limit' || /rate limit|too many/i.test(message)) {
+  if (/rate limit|too many/i.test(message)) {
     return 'Too many attempts. Please wait a minute and try again.';
   }
-  if (code === 'sms_send_failed' || /error sending.*sms|sms.*fail/i.test(message)) {
-    return 'We couldn’t send the code. Check the number and try again.';
+  if (code === 'provider_disabled' || /provider is not enabled|unsupported provider/i.test(message)) {
+    return 'Google sign-in isn’t available right now.';
   }
-  if (code === 'phone_provider_disabled') {
-    return 'Phone sign-in isn’t available right now.';
+  if (/redirect/i.test(message) && /not allowed|invalid/i.test(message)) {
+    return 'Sign-in isn’t set up for this app yet (redirect URL not allowed).';
   }
   if (code === '23514' || code === 'check_violation') {
     if (/18|dob/i.test(message)) return 'You must be 18 or older to use RoomieRoomie.';

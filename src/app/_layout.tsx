@@ -38,7 +38,7 @@ export default function RootLayout() {
   );
 }
 
-// Access rules: signed out → phone login; signed in but incomplete → onboarding;
+// Access rules: signed out → Google sign-in; signed in but incomplete → onboarding;
 // complete profile (incl. ≥ 3 photos and 3 prompts) → the five tabs.
 function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   useAuthListener();
@@ -73,10 +73,10 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
       <Stack.Protected guard={!signedIn} redirectTo={complete ? '/' : '/onboarding'}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
-      <Stack.Protected guard={signedIn && !complete} redirectTo={signedIn ? '/' : '/phone'}>
+      <Stack.Protected guard={signedIn && !complete} redirectTo={signedIn ? '/' : '/sign-in'}>
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false, animation: 'fade' }} />
       </Stack.Protected>
-      <Stack.Protected guard={signedIn && complete} redirectTo={signedIn ? '/onboarding' : '/phone'}>
+      <Stack.Protected guard={signedIn && complete} redirectTo={signedIn ? '/onboarding' : '/sign-in'}>
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="design-system" options={{ presentation: 'modal' }} />
       </Stack.Protected>

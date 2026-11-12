@@ -1,10 +1,10 @@
 // End-to-end test of the onboarding data flow against the LOCAL Supabase stack.
-// Uses the exact functions the app uses (src/features/onboarding/*) with a real phone-OTP session and RLS.
+// Uses the exact functions the app uses (src/features/onboarding/*) with a real signed-in session and RLS.
+// The app signs in with Google, which can't be automated; test users sign in with email/password instead,
+// which produces the same kind of authenticated session.
 //
 //   npx supabase start
 //   SUPABASE_PUBLISHABLE_KEY=... SUPABASE_SECRET_KEY=... npx tsx scripts/e2e-onboarding.ts
-//
-// Test numbers +91 99999 1000x use the fixed local OTP 123456 (supabase/config.toml).
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import { answersFromData, emptyAnswers, mergeDraft } from '../src/features/onboarding/answers';
@@ -14,14 +14,12 @@ import {
   nextPhotoPosition,
   PHOTO_BUCKET,
   saveStep,
-  sendOtp,
   signPhotoUrls,
   uploadPhoto,
-  verifyOtp,
 } from '../src/features/onboarding/api';
 import { getOnboardingStatus, isStepDone, stepsFor, type StepId } from '../src/features/onboarding/steps';
 import type { Answers } from '../src/features/onboarding/types';
-import { normalizeIndianPhone, validateDob, validateStep } from '../src/features/onboarding/validation';
+import { validateDob, validateStep } from '../src/features/onboarding/validation';
 import type { Database } from '../src/types/database';
 import { addDays, addYears, startOfToday, toISODate } from '../src/utils/date';
 
@@ -61,28 +59,20 @@ function ok(condition: unknown, label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-async function signIn(phone: string): Promise<{ client: SupabaseClient<Database>; uid: string }> {
+const PASSWORD = 'e2e-Test-password-1';
+
+// Creates the user on first use, then signs in with a fresh client — like reopening the app.
+async function signIn(email: string): Promise<{ client: SupabaseClient<Database>; uid: string }> {
+  await admin.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
   const client = createClient<Database>(URL, KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
-  for (;;) {
-    try {
-      await sendOtp(client, phone);
-      break;
-    } catch (error) {
-      // Auth enforces a minimum gap between codes to the same number; wait it out like a user would.
-      const wait = /after (\d+) seconds/.exec((error as Error).message)?.[1];
-      if (!wait) throw error;
-      await new Promise((r) => setTimeout(r, (Number(wait) + 1) * 1000));
-    }
-  }
-  await verifyOtp(client, phone, '123456');
-  const { data } = await client.auth.getUser();
-  if (!data.user) throw new Error(`Sign-in failed for ${phone}`);
+  const { data, error } = await client.auth.signInWithPassword({ email, password: PASSWORD });
+  if (error || !data.user) throw error ?? new Error(`Sign-in failed for ${email}`);
   return { client, uid: data.user.id };
 }
 
-async function deleteTestUser(phone: string) {
+async function deleteTestUser(email: string) {
   const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  const user = data.users.find((u) => u.phone === phone.replace('+', ''));
+  const user = data.users.find((u) => u.email === email);
   if (!user) return;
   const files = await admin.storage.from(PHOTO_BUCKET).list(user.id);
   if (files.data?.length) await admin.storage.from(PHOTO_BUCKET).remove(files.data.map((f) => `${user.id}/${f.name}`));
@@ -130,11 +120,11 @@ function scriptedAnswers(seeking: 'need_place' | 'have_place'): Answers {
   };
 }
 
-async function completeFlow(phone: string, seeking: 'need_place' | 'have_place') {
-  console.log(`\n${seeking} flow (${phone})`);
-  await deleteTestUser(phone);
-  const { client, uid } = await signIn(phone);
-  ok(true, 'phone OTP sign-in works');
+async function completeFlow(email: string, seeking: 'need_place' | 'have_place') {
+  console.log(`\n${seeking} flow (${email})`);
+  await deleteTestUser(email);
+  const { client, uid } = await signIn(email);
+  ok(true, 'signed-in session established');
 
   let data = await loadOnboarding(client, uid);
   let status = getOnboardingStatus(data);
@@ -180,8 +170,8 @@ async function completeFlow(phone: string, seeking: 'need_place' | 'have_place')
   const signed = await signPhotoUrls(client, data.photos.map((p) => p.url));
   ok(Object.keys(signed).length === data.photos.length, 'own photos get signed URLs');
 
-  // Reopen the app: fresh session, same phone — everything restores.
-  const reopened = await signIn(phone);
+  // Reopen the app: fresh session, same account — everything restores.
+  const reopened = await signIn(email);
   ok(reopened.uid === uid, 'same account after re-login');
   const restored = await loadOnboarding(reopened.client, uid);
   ok(getOnboardingStatus(restored).complete, 'completion survives reopening');
@@ -201,14 +191,11 @@ async function completeFlow(phone: string, seeking: 'need_place' | 'have_place')
 
 async function main() {
   console.log('Validators');
-  ok(normalizeIndianPhone('98765 43210') === '+919876543210', 'normalises a 10-digit number');
-  ok(normalizeIndianPhone('+91 98765-43210') === '+919876543210', 'accepts +91 prefix');
-  ok(normalizeIndianPhone('12345 67890') === null, 'rejects numbers not starting 6–9');
   ok(validateDob(toISODate(addYears(startOfToday(), -18))) === null, 'exactly 18 today is allowed');
   ok(validateDob(toISODate(addDays(addYears(startOfToday(), -18), 1))) !== null, '18 tomorrow is rejected');
 
-  await completeFlow('+919999910001', 'need_place');
-  const host = await completeFlow('+919999910002', 'have_place');
+  await completeFlow('e2e-seeker@roomieroomie.test', 'need_place');
+  const host = await completeFlow('e2e-host@roomieroomie.test', 'have_place');
 
   console.log('\nSwitching a host to seeker');
   const roomPhoto = host.data.photos.find((p) => p.is_room_photo)!;
@@ -220,16 +207,16 @@ async function main() {
   ok(getOnboardingStatus(switched).complete, 'still complete as a seeker');
 
   console.log('\nPartial onboarding + restore');
-  const phone = '+919999910003';
-  await deleteTestUser(phone);
-  const partial = await signIn(phone);
+  const partialEmail = 'e2e-partial@roomieroomie.test';
+  await deleteTestUser(partialEmail);
+  const partial = await signIn(partialEmail);
   const a = scriptedAnswers('need_place');
   let d = await loadOnboarding(partial.client, partial.uid);
   for (const step of ['name_dob', 'gender', 'want_genders'] as StepId[]) {
     await saveStep(partial.client, partial.uid, step, a, d);
     d = await loadOnboarding(partial.client, partial.uid);
   }
-  const reopen = await signIn(phone);
+  const reopen = await signIn(partialEmail);
   const status = getOnboardingStatus(await loadOnboarding(reopen.client, reopen.uid));
   ok(!status.complete && status.resumeStep === 'show_to_genders', 'reopening resumes at the first unanswered step');
 
@@ -258,11 +245,12 @@ async function main() {
   );
   ok(true, 'seekers cannot add room photos');
 
-  const other = await signIn('+919999910004');
+  await deleteTestUser('e2e-other@roomieroomie.test');
+  const other = await signIn('e2e-other@roomieroomie.test');
   const sneaky = await other.client.storage.from(PHOTO_BUCKET).upload(`${partial.uid}/evil.webp`, WEBP, { contentType: 'image/webp' });
   ok(sneaky.error, 'cannot upload into another user’s photo folder');
 
-  for (const p of ['+919999910001', '+919999910002', '+919999910003', '+919999910004']) await deleteTestUser(p);
+  for (const e of ['seeker', 'host', 'partial', 'other']) await deleteTestUser(`e2e-${e}@roomieroomie.test`);
   console.log(`\nAll ${passed} checks passed; test users removed.`);
 }
 

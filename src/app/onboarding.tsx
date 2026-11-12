@@ -19,7 +19,7 @@ import { useDraftHydrated, useOnboardingDraft } from '@/stores/onboardingDraftSt
 import { useSessionStore } from '@/stores/sessionStore';
 
 function confirmSignOut() {
-  Alert.alert('Use a different number?', 'You’ll be signed out. Your answers so far are saved.', [
+  Alert.alert('Use a different account?', 'You’ll be signed out. Your answers so far are saved.', [
     { text: 'Cancel', style: 'cancel' },
     { text: 'Sign out', style: 'destructive', onPress: () => getSupabase().auth.signOut() },
   ]);

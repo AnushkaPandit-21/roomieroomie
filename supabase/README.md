@@ -22,7 +22,8 @@ supabase/
 
 ## Option A — Supabase CLI (recommended)
 
-Requires Docker Desktop for the local stack.
+Requires Docker Desktop for the local stack. **CLI 3.x targets the LOCAL database by default —
+add `--remote` to act on the linked hosted project.**
 
 ```bash
 # Local development
@@ -34,11 +35,11 @@ npx supabase db lint               # static checks on functions
 # Remote project (dev first, then production)
 npx supabase login
 npx supabase link --project-ref <your-project-ref>
-npx supabase db push               # applies migrations only — never the seed
+npx supabase db push --remote      # applies migrations to the hosted project — never the seed
 ```
 
 To seed a **dev** remote project (never production):
-`npx supabase db push --include-seed` or paste `seed/dev_seed.sql` into the SQL editor.
+`npx supabase db push --remote --include-seed` or paste `seed/dev_seed.sql` into the SQL editor.
 
 ## Option B — Supabase dashboard SQL editor
 
@@ -46,24 +47,23 @@ To seed a **dev** remote project (never production):
 2. Paste and run each file in `migrations/` **in filename order** (01 → 08). Each one is re-runnable.
 3. Dev project only: run `seed/dev_seed.sql`. Remove it later with `seed/cleanup_seed.sql`.
 
-## Phone login (SMS OTP)
+## Google sign-in (current login)
 
-**Local:** already on. Use test numbers `+91 99999 10001` … `10005`, code `123456` (no SMS is sent).
+1. **Google Cloud Console** → APIs & Services → Credentials → *Create credentials* → **OAuth client ID** →
+   type **Web application**. Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
+   (First time: configure the OAuth consent screen — app name RoomieRoomie, your email, External.)
+2. **Supabase dashboard** → Authentication → Sign In / Providers → **Google** → enable → paste the
+   Client ID and Client Secret → Save.
+3. Authentication → **URL Configuration** → Redirect URLs → add `exp://**` (Expo Go) and `roomieroomie://**`.
 
-**Hosted project — pick one:**
+Local stack: Google is off in `config.toml` (needs its own OAuth client with redirect
+`http://127.0.0.1:54321/auth/v1/callback`).
 
-- **MSG91 (via hook)**
-  1. In MSG91, create a DLT-approved OTP template; note the template id and auth key.
-  2. `npx supabase functions deploy send-sms --no-verify-jwt`
-  3. Dashboard → Authentication → Sign In / Providers → **Phone**: enable.
-  4. Dashboard → Authentication → **Hooks** → add **Send SMS** hook → type *HTTPS* → URL
-     `https://<project-ref>.supabase.co/functions/v1/send-sms` → generate the secret.
-  5. `npx supabase secrets set SEND_SMS_HOOK_SECRET='v1,whsec_…' SMS_PROVIDER=msg91 MSG91_AUTH_KEY=… MSG91_TEMPLATE_ID=…`
-- **Twilio (native, simplest)** — Phone provider → SMS provider *Twilio* → Account SID, Auth Token,
-  Messaging Service SID. No hook needed. (Or use the hook with `SMS_PROVIDER=twilio` + `TWILIO_*` secrets.)
+## Phone login (paused)
 
-For testing on a phone before SMS is set up: Phone provider → **Test phone numbers and OTPs**
-(e.g. `919999910001=123456`).
+Phone OTP is disabled for now. The `functions/send-sms` hook (MSG91 or Twilio via `SMS_PROVIDER`) is kept
+for when phone verification returns: deploy with `npx supabase functions deploy send-sms --no-verify-jwt`,
+add it under Authentication → Hooks → Send SMS, and set its secrets (see the function header).
 
 ## Test data vs production
 
