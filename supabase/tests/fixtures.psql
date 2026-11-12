@@ -1,0 +1,80 @@
+-- Shared test fixtures, included by each *.test.sql via \ir. Everything is created inside the
+-- test's transaction (pg_temp + rollback), so nothing persists.
+
+-- Creates a complete profile (3 photos, 3 prompts, preferences) and stores its id in the
+-- setting test.<label> so later statements (also as `authenticated`) can read it.
+create function pg_temp.mk_user(label text, attrs jsonb default '{}')
+returns uuid
+language plpgsql
+as $fx$
+declare
+  uid uuid := gen_random_uuid();
+begin
+  insert into auth.users (instance_id, id, aud, role, raw_app_meta_data, raw_user_meta_data)
+  values ('00000000-0000-0000-0000-000000000000', uid, 'authenticated', 'authenticated', '{"test": true}', '{}');
+
+  insert into public.profiles (id, name, dob, gender, want_genders, show_to_genders, city, areas,
+    max_budget, move_in_date, seeking_type, is_paused, last_active_at)
+  values (
+    uid, label, (current_date - interval '25 years')::date,
+    coalesce(attrs ->> 'gender', 'female')::public.gender,
+    coalesce(attrs ->> 'want', '{female}')::public.gender[],
+    coalesce(attrs ->> 'show', '{female}')::public.gender[],
+    coalesce(attrs ->> 'city', 'Testpur'),
+    coalesce(attrs ->> 'areas', '{Koramangala,"HSR Layout"}')::text[],
+    coalesce((attrs ->> 'budget')::integer, 15000),
+    current_date + coalesce((attrs ->> 'move_in_offset')::integer, 10),
+    coalesce(attrs ->> 'seeking', 'need_place')::public.seeking_type,
+    coalesce((attrs ->> 'paused')::boolean, false),
+    now() - make_interval(days => coalesce((attrs ->> 'inactive_days')::integer, 0))
+  );
+
+  insert into public.preferences (profile_id, food, smoking, drinking, sleep, cleanliness, guests, pets, language, dealbreakers)
+  values (
+    uid,
+    coalesce(attrs ->> 'food', 'veg')::public.food_preference,
+    coalesce(attrs ->> 'smoking', 'no')::public.habit_preference,
+    coalesce(attrs ->> 'drinking', 'no')::public.habit_preference,
+    coalesce(attrs ->> 'sleep', 'early')::public.sleep_schedule,
+    coalesce((attrs ->> 'cleanliness')::smallint, 4),
+    coalesce(attrs ->> 'guests', 'sometimes')::public.guests_preference,
+    coalesce(attrs ->> 'pets', 'no_pets')::public.pets_preference,
+    coalesce(attrs ->> 'language', '{English,Hindi}')::text[],
+    coalesce(attrs ->> 'dealbreakers', '{}')::public.dealbreaker_field[]
+  );
+
+  insert into public.photos (profile_id, url, position)
+  select uid, 'https://example.test/' || uid || '/' || k, k
+  from generate_series(1, coalesce((attrs ->> 'photos')::integer, 3)) k;
+
+  insert into public.prompts (profile_id, question, answer, position)
+  select uid, 'Question ' || k, 'Answer ' || k, k from generate_series(1, 3) k;
+
+  if attrs ? 'rent' then
+    insert into public.listings (host_id, area, rent, deposit, available_from, occupancy, furnished)
+    values (uid, 'Koramangala', (attrs ->> 'rent')::integer, 0, current_date + 10, 1, true);
+  end if;
+
+  perform set_config('test.' || label, uid::text, false);
+  return uid;
+end;
+$fx$;
+
+-- Id of a fixture user.
+create function pg_temp.uid(label text)
+returns uuid
+language sql
+as $fx$ select current_setting('test.' || label)::uuid $fx$;
+
+-- Sets the JWT claims for a fixture user. Follow with `set local role authenticated;`
+-- and `reset role;` before switching to another user.
+create function pg_temp.claims(label text)
+returns void
+language sql
+as $fx$
+  select set_config(
+    'request.jwt.claims',
+    json_build_object('sub', current_setting('test.' || label), 'role', 'authenticated')::text,
+    true
+  );
+$fx$;
