@@ -16,18 +16,19 @@ import { sendLike, sendPass } from '../src/features/feed/api';
 import { fetchLikesYouCount, fetchLikesYouPage } from '../src/features/likes/api';
 import { likedItemLabel } from '../src/features/likes/labels';
 import { loadOnboarding } from '../src/features/onboarding/api';
+import { fetchRoomsPage, sendInterest } from '../src/features/rooms/api';
 import { blockUser, reportUser } from '../src/features/safety/api';
-import type { Answers } from '../src/features/onboarding/types';
+import type { Answers, ListingDraft } from '../src/features/onboarding/types';
 
 import { completeProfile, deleteTestUser, ok, passedCount, scriptedAnswers, signIn } from './e2e-helpers';
 
 // An isolated test city so seed data never appears.
 const CITY = 'Socialpur';
-const USERS = ['me', 'ana', 'bea', 'cara'] as const;
+const USERS = ['me', 'ana', 'bea', 'cara', 'dee', 'eve'] as const;
 type Label = (typeof USERS)[number];
 const email = (l: Label) => `e2e-social-${l}@roomieroomie.test`;
 
-function answers(overrides: Partial<Answers>): Answers {
+function answers(overrides: Partial<Omit<Answers, 'listing'>> & { listing?: Partial<ListingDraft> }): Answers {
   const base = scriptedAnswers('need_place');
   return {
     ...base,
@@ -46,13 +47,14 @@ async function main() {
   for (const l of USERS) await deleteTestUser(email(l));
   const users = {} as Record<Label, Awaited<ReturnType<typeof signIn>>>;
   for (const l of USERS) users[l] = await signIn(email(l));
-  const { me, ana, bea, cara } = users;
+  const { me, ana, bea, cara, dee, eve } = users;
 
   console.log('Setting up profiles');
   await completeProfile(me.client, me.uid, answers({ name: 'Me' }));
   await completeProfile(ana.client, ana.uid, answers({ name: 'Ana' }));
   await completeProfile(bea.client, bea.uid, answers({ name: 'Bea' }));
   await completeProfile(cara.client, cara.uid, answers({ name: 'Cara' }));
+  await completeProfile(eve.client, eve.uid, answers({ name: 'Eve' }));
   const mine = await loadOnboarding(me.client, me.uid);
 
   console.log('\nLikes You');
@@ -137,6 +139,28 @@ async function main() {
   ok(true, 'reporting twice is harmless');
   await blockUser(me.client, me.uid, cara.uid);
   ok((await fetchProfile(cara.client, me.uid)) === null, 'a blocked person can no longer open your profile');
+
+  console.log('\nRooms');
+  await completeProfile(dee.client, dee.uid, answers({ name: 'Dee', seeking_type: 'have_place', listing: { rent: 12000 } }));
+  const rooms = await fetchRoomsPage(eve.client);
+  const room = rooms.rooms.find((r) => r.id === dee.uid);
+  ok(!!room && room.listing?.rent === 12000 && (room.listing?.room_photos.length ?? 0) >= 1, 'a host with a listing shows in Rooms with room photos');
+  ok(!('address' in (room?.listing ?? {})), 'no address on a room');
+  ok((await fetchRoomsPage(eve.client, { filters: { areas: [], maxBudget: 10000, moveInBy: null } })).rooms.length === 0, 'max rent filter');
+  ok((await fetchRoomsPage(eve.client, { filters: { areas: ['Alpha Nagar'], maxBudget: null, moveInBy: null } })).rooms.length === 1, 'area filter');
+
+  const interest = await sendInterest(eve.client, eve.uid, room!, 'Can I visit on Saturday?');
+  ok(!interest.matched, '"I\'m interested" is sent as a like');
+  ok(!(await fetchRoomsPage(eve.client)).rooms.some((r) => r.id === dee.uid), 'the room leaves my Rooms list');
+  const deeMine = await loadOnboarding(dee.client, dee.uid);
+  const deeLikes = await fetchLikesYouPage(dee.client);
+  const fromEve = deeLikes.likes.find((l) => l.profile.id === eve.uid);
+  ok(
+    fromEve?.comment === 'Can I visit on Saturday?' && likedItemLabel(fromEve.likedItemId, deeMine) === 'Interested in your room',
+    'the host sees "Interested in your room" with the note in Likes You',
+  );
+  const deeBack = await sendLike(dee.client, dee.uid, eve.uid);
+  ok(deeBack.matched, 'the host liking back creates a match');
 
   for (const l of USERS) await deleteTestUser(email(l));
   console.log(`\nAll ${passedCount()} checks passed; test users removed.`);

@@ -336,6 +336,7 @@ src/
   components/profile/ProfileCard.tsx — reusable Hinge-style card (Discover, Likes You, Rooms, Matches)
   features/chat/   api.ts (get_matches, messages, read receipts, unmatch, get_profile), useMatches.ts (+ inbox realtime), useChat.ts (realtime, typing, optimistic send)
   features/safety/ api.ts (report/block), useSafety.ts, components/ (ReportSheet, ActionSheet)
+  features/rooms/  api.ts (get_rooms, sendInterest), useRooms.ts, components/RoomCard.tsx
   features/likes/  api.ts (get_likes_you), labels.ts (what of mine they liked), useLikesYou.ts (list, badge count, like back / cross)
 scripts/          e2e-onboarding.ts, e2e-discover.ts, e2e-social.ts (+ e2e-helpers.ts) — end-to-end tests against the LOCAL stack (`npm run test:e2e`)
 supabase/
@@ -431,6 +432,13 @@ _Record every owner-approved implementation decision here (date, decision, secti
   - `mark_match_read(match_id)` sets `read_at` (server time) on the other person's messages when the chat is open. `messages.created_at` is forced to server time by trigger. `get_profile(id)` returns one card only if `can_view_profile` (D16).
   - Chat `/chat/[id]`: last 30 messages, older on scroll, live inserts + read receipts via Realtime postgres_changes (RLS-filtered), typing indicator via Realtime broadcast on `match:<id>`, optimistic send with retry, "Sent/Read" under my last message. Safety tips card at the top of every conversation. Menu: view profile (`/person/[id]`), unmatch, report (reason list + details; also unmatches), block.
   - "It's a match" now offers **Send a message**.
+- 2026-11-14 — **Rooms (§11 step 8) built.** Migration 14. Interpretations R1–R5 (owner may revise):
+  - R1 `get_rooms(p_limit, p_cursor, p_areas, p_max_rent, p_available_by)` lists hosts with a listing in my city: host not paused and complete, two-way gender rule, dealbreakers both ways (`private.dealbreakers_ok`), not blocked/reported, not already liked/crossed by me or matched, not me.
+  - R2 Budget and move-in hard filters are **not** applied in Rooms (it's a browse view); the optional filters are listing area, max rent (= rent share) and available-by. Filters persist on the device.
+  - R3 Ordered by match % (`private.match_score`), then host id; cursor "score|id".
+  - R4 "I'm interested" = a like on the host's first room photo with an optional note (≤ 300); same daily limit and match trigger. The host's Likes You shows "Interested in your room".
+  - R5 Hosts see "Your listing" at the top of Rooms with **Edit listing** (`/listing/edit`: same form and room-photo rules as onboarding).
+  - Room detail `/room/[id]`: room photos, rent, deposit, area, available-from, occupancy, furnishing, amenities, then the host's ProfileCard. Area only — never an address.
 
 ## 16. Open questions (need owner input before the relevant step)
 - Logo (app icon and splash still use Expo's default images), and sign-off on the colours/fonts in §15.

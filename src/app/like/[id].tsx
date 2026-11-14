@@ -22,10 +22,16 @@ function LikedBanner({ like, myPhotoUri, item }: { like: IncomingLike; myPhotoUr
   return (
     <Card className="mb-4">
       <Text variant="label" tone="muted">
-        {item?.kind === 'photo' ? 'Liked your photo' : item?.kind === 'prompt' ? 'Liked your answer' : 'Liked your profile'}
+        {item?.kind === 'photo'
+          ? 'Liked your photo'
+          : item?.kind === 'room'
+            ? 'Interested in your room'
+            : item?.kind === 'prompt'
+              ? 'Liked your answer'
+              : 'Liked your profile'}
       </Text>
       <View className="mt-3 flex-row gap-3">
-        {item?.kind === 'photo' ? (
+        {item?.kind === 'photo' || item?.kind === 'room' ? (
           <View className="w-16">
             <Photo source={myPhotoUri ? { uri: myPhotoUri } : undefined} rounded="md" />
           </View>
@@ -75,7 +81,7 @@ export default function IncomingLikeScreen() {
   const photoUrls = useProfilePhotoUrls(like?.profile ?? null);
   const urls = photoUrls.data ?? {};
   const myItem = resolveMyItem(like?.likedItemId ?? null, mine);
-  const myPhoto = useSignedPhotoUrls(myItem?.kind === 'photo' ? [myItem.url] : []);
+  const myPhoto = useSignedPhotoUrls(myItem?.kind === 'photo' || myItem?.kind === 'room' ? [myItem.url] : []);
 
   if (!like) {
     return (
@@ -103,7 +109,7 @@ export default function IncomingLikeScreen() {
       ) : null}
       <View className="flex-1">
         <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 112 }} showsVerticalScrollIndicator={false}>
-          <LikedBanner like={like} item={myItem} myPhotoUri={myItem?.kind === 'photo' ? myPhoto.data?.[myItem.url] : undefined} />
+          <LikedBanner like={like} item={myItem} myPhotoUri={myItem?.kind === 'photo' || myItem?.kind === 'room' ? myPhoto.data?.[myItem.url] : undefined} />
           <ProfileCard profile={profile} photoUrls={urls} onLike={setLiking} />
         </ScrollView>
         <View className="absolute bottom-4 left-0 right-0 flex-row items-center justify-between">

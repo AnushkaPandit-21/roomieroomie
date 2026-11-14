@@ -85,6 +85,8 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="like/[id]" />
         <Stack.Screen name="chat/[id]" />
         <Stack.Screen name="person/[id]" />
+        <Stack.Screen name="room/[id]" />
+        <Stack.Screen name="listing/edit" />
         <Stack.Screen name="design-system" options={{ presentation: 'modal' }} />
       </Stack.Protected>
     </Stack>

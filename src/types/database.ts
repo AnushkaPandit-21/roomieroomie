@@ -252,6 +252,11 @@ isOneToOne: false
               "age": number,"areas": (string)[],"bio": string,"city": string,"gender": Database["public"]['Enums']["gender"],"household_budget": number,"listing": Json,"match_score": number,"max_budget": number,"move_in_date": string,"name": string,"occupation": string,"photos": Json,"preferences": Json,"profile_id": string,"prompts": Json,"seeking_type": Database["public"]['Enums']["seeking_type"]
             }[]
                            },
+"get_rooms":
+{ Args: { "p_areas"?: (string)[],"p_available_by"?: string,"p_cursor"?: string,"p_limit"?: number,"p_max_rent"?: number }; Returns: {
+              "age": number,"areas": (string)[],"bio": string,"city": string,"gender": Database["public"]['Enums']["gender"],"household_budget": number,"listing": Json,"match_score": number,"max_budget": number,"move_in_date": string,"name": string,"next_cursor": string,"occupation": string,"photos": Json,"preferences": Json,"profile_id": string,"prompts": Json,"seeking_type": Database["public"]['Enums']["seeking_type"]
+            }[]
+                           },
 "get_unread_count":
 { Args: Record<PropertyKey, never>; Returns: number
                            },

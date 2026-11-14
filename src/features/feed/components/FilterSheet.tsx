@@ -16,6 +16,9 @@ type FilterSheetProps = {
   filters: FeedFilters;
   onApply: (filters: FeedFilters) => void;
   onClose: () => void;
+  // Rooms reuses this sheet with listing wording (max rent, available by).
+  budgetTitle?: string;
+  dateTitle?: string;
 };
 
 function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
@@ -41,7 +44,15 @@ function ClearLink({ onPress }: { onPress: () => void }) {
 }
 
 // Discover filters: areas, budget, move-in (F1). Changes apply only when "Show results" is tapped.
-export function FilterSheet({ visible, city, filters, onApply, onClose }: FilterSheetProps) {
+export function FilterSheet({
+  visible,
+  city,
+  filters,
+  onApply,
+  onClose,
+  budgetTitle = 'Their budget, up to',
+  dateTitle = 'Moving in by',
+}: FilterSheetProps) {
   const [draft, setDraft] = useState<FeedFilters>(filters);
   useEffect(() => {
     if (visible) setDraft(filters);
@@ -82,7 +93,7 @@ export function FilterSheet({ visible, city, filters, onApply, onClose }: Filter
         )}
       </Section>
 
-      <Section title="Their budget, up to">
+      <Section title={budgetTitle}>
         <View className="flex-row items-center justify-between">
           <Text variant="heading">{draft.maxBudget == null ? 'Any budget' : formatRupees(draft.maxBudget)}</Text>
           <Chip
@@ -106,7 +117,7 @@ export function FilterSheet({ visible, city, filters, onApply, onClose }: Filter
       </Section>
 
       <Section
-        title="Moving in by"
+        title={dateTitle}
         action={draft.moveInBy ? <ClearLink onPress={() => setDraft({ ...draft, moveInBy: null })} /> : null}
       >
         <DateField
