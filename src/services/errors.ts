@@ -9,8 +9,13 @@ export function friendlyError(error: unknown): string {
   if (/network request failed|failed to fetch|fetch failed/i.test(message)) {
     return 'You seem to be offline. Check your connection and try again.';
   }
+  // Dev-only setup hint from signInWithGoogle; shown as is.
+  if (message.includes('npm run dev')) return message;
   if (/rate limit|too many/i.test(message)) {
     return 'Too many attempts. Please wait a minute and try again.';
+  }
+  if (code === 'anonymous_provider_disabled' || /anonymous sign-ins are disabled/i.test(message)) {
+    return 'Turn on “Allow anonymous sign-ins” in Supabase → Authentication → Sign In / Providers.';
   }
   if (code === 'provider_disabled' || /provider is not enabled|unsupported provider/i.test(message)) {
     return 'Google sign-in isn’t available right now.';

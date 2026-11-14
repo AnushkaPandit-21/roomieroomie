@@ -54,7 +54,8 @@ To seed a **dev** remote project (never production):
    (First time: configure the OAuth consent screen — app name RoomieRoomie, your email, External.)
 2. **Supabase dashboard** → Authentication → Sign In / Providers → **Google** → enable → paste the
    Client ID and Client Secret → Save.
-3. Authentication → **URL Configuration** → Redirect URLs → add `exp://**` (Expo Go) and `roomieroomie://**`.
+3. Authentication → **URL Configuration** → Redirect URLs → add `exp://**` and `exps://**` (Expo Go; exps when tunnelled) and `roomieroomie://**` (builds).
+   Supabase rejects return addresses whose host is a bare IP (e.g. `exp://192.168.1.5:8081/...`), so in Expo Go start the app with `npm run dev`, which serves it as `<ip>.nip.io`.
 
 Local stack: Google is off in `config.toml` (needs its own OAuth client with redirect
 `http://127.0.0.1:54321/auth/v1/callback`).

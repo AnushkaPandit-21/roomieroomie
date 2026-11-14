@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/layout';
 import { colors } from '@/constants/theme';
 import { getOnboardingStatus } from '@/features/onboarding/steps';
 import { useOnboardingData } from '@/features/onboarding/useOnboardingData';
+import { useAuthCallbackListener } from '@/hooks/useAuthCallbackListener';
 import { useAuthListener } from '@/hooks/useAuthListener';
 import { useTouchLastActive } from '@/hooks/useTouchLastActive';
 import { queryClient } from '@/services/queryClient';
@@ -43,6 +44,7 @@ export default function RootLayout() {
 // complete profile (incl. ≥ 3 photos and 3 prompts) → the five tabs.
 function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   useAuthListener();
+  useAuthCallbackListener();
   const session = useSessionStore((s) => s.session);
   const initialized = useSessionStore((s) => s.initialized);
   const configError = useSessionStore((s) => s.configError);

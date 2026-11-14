@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { Button, Text } from '@/components/ui';
 import { layout } from '@/constants/theme';
-import { SignInCancelled, signInWithGoogle } from '@/features/auth/google';
+import { authDebugInfo, SignInCancelled, signInForDevelopment, signInWithGoogle } from '@/features/auth/google';
 import { useResponsive } from '@/hooks/useResponsive';
 import { friendlyError } from '@/services/errors';
 
@@ -16,11 +16,11 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const signIn = async () => {
+  const run = async (method: () => Promise<void>) => {
     setError(null);
     setLoading(true);
     try {
-      await signInWithGoogle();
+      await method();
     } catch (e) {
       if (!(e instanceof SignInCancelled)) setError(friendlyError(e));
     } finally {
@@ -55,11 +55,25 @@ export default function SignInScreen() {
           leftIcon="logo-google"
           fullWidth
           loading={loading}
-          onPress={signIn}
+          onPress={() => run(signInWithGoogle)}
         />
+        {__DEV__ ? (
+          <Button
+            label="Skip sign-in (dev only)"
+            variant="ghost"
+            fullWidth
+            disabled={loading}
+            onPress={() => run(signInForDevelopment)}
+          />
+        ) : null}
         <Text variant="caption" tone="subtle" align="center">
           You must be 18 or older to use RoomieRoomie.
         </Text>
+        {__DEV__ ? (
+          <Text variant="caption" tone="subtle" align="center" selectable>
+            {authDebugInfo()}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

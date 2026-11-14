@@ -42,6 +42,7 @@
   },
   "scripts": {
     "start": "expo start",
+    "dev": "node scripts/start-dev.mjs",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "typecheck": "tsc --noEmit",
