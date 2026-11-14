@@ -13,6 +13,10 @@ export const STEP_COPY: Record<StepId, StepCopy> = {
   city_areas: { title: 'Where do you want to live?', subtitle: 'Pick your city, then the areas that work for you.' },
   seeking_type: { title: 'Are you looking for a place, or do you have one?' },
   max_budget: { title: "What's your maximum budget?", subtitle: 'Your monthly share of the rent.' },
+  household_budget: {
+    title: 'And for household expenses?',
+    subtitle: 'Your monthly share of things like a maid, cook, electricity and WiFi.',
+  },
   move_in_date: { title: 'When do you want to move in?' },
   food: { overline: 'Lifestyle', title: 'What do you eat?' },
   smoking: { overline: 'Lifestyle', title: 'Do you smoke?' },
@@ -22,6 +26,7 @@ export const STEP_COPY: Record<StepId, StepCopy> = {
   guests: { overline: 'Lifestyle', title: 'How often do you have guests over?' },
   pets: { overline: 'Lifestyle', title: 'What about pets?' },
   languages: { overline: 'Lifestyle', title: 'Which languages do you speak?', subtitle: 'Select all that apply.' },
+  religion: { title: "What's your religion?", subtitle: 'Shown on your profile unless you prefer not to say.' },
   dealbreakers: {
     title: 'Any dealbreakers?',
     subtitle: 'Marked answers must match exactly for someone to appear in your feed. This is optional.',

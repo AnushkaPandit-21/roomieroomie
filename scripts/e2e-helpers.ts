@@ -79,6 +79,7 @@ export function scriptedAnswers(seeking: 'need_place' | 'have_place'): Answers {
     areas: ['Koramangala', 'HSR Layout'],
     seeking_type: seeking,
     max_budget: 18000,
+    household_budget: 2500,
     move_in_date: toISODate(addDays(today, 14)),
     food: 'veg',
     smoking: 'no',
@@ -88,7 +89,8 @@ export function scriptedAnswers(seeking: 'need_place' | 'have_place'): Answers {
     guests: 'sometimes',
     pets: 'okay',
     language: ['English', 'Hindi', 'Kannada'],
-    dealbreakers: ['smoking'],
+    religion: 'jain',
+    dealbreakers: ['smoking', 'religion'],
     occupation: 'Product Designer',
     prompts: [
       { question: 'My ideal Sunday at home looks like', answer: 'Chai and a long breakfast.' },

@@ -85,6 +85,8 @@ declare
   v_show public.gender[];
   v_areas text[];
   v_budget integer;
+  v_household integer;
+  v_religion public.religion;
   v_move_in date;
   v_seeking public.seeking_type;
   v_rent integer;
@@ -153,6 +155,7 @@ begin
       select a from unnest(city_areas) a order by random() limit 1 + floor(random() * 3)::int
     );
     v_budget := (round((budget_min + random() * (budget_max - budget_min)) / 500) * 500)::int;
+    v_household := (500 * floor(random() * 11))::int;  -- ₹0–5,000 for maid/cook/utilities
     v_move_in := current_date + floor(random() * 61)::int;
     v_seeking := case when random() < 0.25 then 'have_place' else 'need_place' end;
 
@@ -171,12 +174,12 @@ begin
     );
 
     insert into public.profiles (
-      id, name, dob, gender, want_genders, show_to_genders, city, areas, max_budget, move_in_date,
+      id, name, dob, gender, want_genders, show_to_genders, city, areas, max_budget, household_budget, move_in_date,
       seeking_type, occupation, bio, is_paused, last_active_at
     ) values (
       uid, v_name,
       current_date - make_interval(years => 19 + floor(random() * 16)::int, days => floor(random() * 365)::int),
-      v_gender, v_want, v_show, v_city, v_areas, v_budget, v_move_in,
+      v_gender, v_want, v_show, v_city, v_areas, v_budget, v_household, v_move_in,
       v_seeking,
       occupations[1 + floor(random() * cardinality(occupations))::int],
       bios[1 + floor(random() * cardinality(bios))::int],
@@ -204,14 +207,24 @@ begin
     if cardinality(langs) = 0 then langs := array['English']; end if;
 
     r := random();
-    dealbreakers := case
-      when r < 0.62 then array[]::public.dealbreaker_field[]
-      when r < 0.92 then array(select f from unnest(enum_range(null::public.dealbreaker_field)) f order by random() limit 1)
-      else array(select f from unnest(enum_range(null::public.dealbreaker_field)) f order by random() limit 2)
+    v_religion := case
+      when r < 0.55 then 'hindu' when r < 0.67 then 'muslim' when r < 0.75 then 'christian'
+      when r < 0.80 then 'sikh' when r < 0.84 then 'jain' when r < 0.86 then 'buddhist'
+      when r < 0.87 then 'parsi' when r < 0.90 then 'other' else 'prefer_not_to_say'
     end;
 
-    insert into public.preferences (profile_id, food, smoking, drinking, sleep, cleanliness, guests, pets, language, dealbreakers)
-    values (uid, v_food, v_smoking, v_drinking, v_sleep, 2 + floor(random() * 4)::int, v_guests, v_pets, langs, dealbreakers);
+    -- Religion can only be a dealbreaker with a stated religion.
+    r := random();
+    dealbreakers := case
+      when r < 0.62 then array[]::public.dealbreaker_field[]
+      when r < 0.92 then array(select f from unnest(enum_range(null::public.dealbreaker_field)) f
+        where f <> 'religion' or v_religion <> 'prefer_not_to_say' order by random() limit 1)
+      else array(select f from unnest(enum_range(null::public.dealbreaker_field)) f
+        where f <> 'religion' or v_religion <> 'prefer_not_to_say' order by random() limit 2)
+    end;
+
+    insert into public.preferences (profile_id, food, smoking, drinking, sleep, cleanliness, guests, pets, language, religion, dealbreakers)
+    values (uid, v_food, v_smoking, v_drinking, v_sleep, 2 + floor(random() * 4)::int, v_guests, v_pets, langs, v_religion, dealbreakers);
 
     -- 3–6 profile photos (placeholder images, no real people)
     n := 3 + floor(random() * 4)::int;

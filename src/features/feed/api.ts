@@ -21,6 +21,7 @@ export function toCardProfile(row: FeedProfile): CardProfile {
     city: row.city,
     areas: row.areas ?? [],
     maxBudget: row.max_budget,
+    householdBudget: row.household_budget,
     moveInDate: row.move_in_date,
     seekingType: row.seeking_type,
     occupation: row.occupation,

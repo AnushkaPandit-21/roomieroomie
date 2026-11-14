@@ -13,6 +13,7 @@ export const STEP_IDS = [
   'city_areas',
   'seeking_type',
   'max_budget',
+  'household_budget',
   'move_in_date',
   'food',
   'smoking',
@@ -22,6 +23,7 @@ export const STEP_IDS = [
   'guests',
   'pets',
   'languages',
+  'religion',
   'dealbreakers',
   'occupation',
   'photos',
@@ -64,6 +66,8 @@ export function isStepDone(step: StepId, data: OnboardingData): boolean {
       return !!p?.seeking_type;
     case 'max_budget':
       return p?.max_budget != null;
+    case 'household_budget':
+      return p?.household_budget != null;
     case 'move_in_date':
       return !!p?.move_in_date;
     case 'food':
@@ -82,6 +86,8 @@ export function isStepDone(step: StepId, data: OnboardingData): boolean {
       return pr?.pets != null;
     case 'languages':
       return (pr?.language.length ?? 0) > 0;
+    case 'religion':
+      return pr?.religion != null;
     case 'dealbreakers':
       // Optional: having none is a valid answer.
       return pr != null;

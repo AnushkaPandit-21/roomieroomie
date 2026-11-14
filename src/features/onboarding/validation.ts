@@ -1,6 +1,6 @@
 import { addDays, ageOn, isValidISODate, parseISODate, startOfToday } from '@/utils/date';
 
-import { BUDGET, CITIES, LIMITS, PHOTO_LIMITS, ROOM_PHOTO_LIMITS } from './options';
+import { BUDGET, CITIES, HOUSEHOLD_BUDGET, LIMITS, PHOTO_LIMITS, ROOM_PHOTO_LIMITS } from './options';
 import { countPhotos, type StepId } from './steps';
 import type { Answers, OnboardingData } from './types';
 
@@ -41,6 +41,12 @@ export function validateStep(step: StepId, a: Answers, data: OnboardingData): st
       return a.max_budget != null && a.max_budget >= BUDGET.min && a.max_budget <= BUDGET.max
         ? null
         : 'Set your maximum budget.';
+    case 'household_budget':
+      return a.household_budget != null &&
+        a.household_budget >= HOUSEHOLD_BUDGET.min &&
+        a.household_budget <= HOUSEHOLD_BUDGET.max
+        ? null
+        : 'Set your household budget.';
     case 'move_in_date': {
       if (!isValidISODate(a.move_in_date)) return 'Choose your move-in date.';
       const date = parseISODate(a.move_in_date);
@@ -59,6 +65,8 @@ export function validateStep(step: StepId, a: Answers, data: OnboardingData): st
       return a.cleanliness != null ? null : 'Choose one.';
     case 'languages':
       return a.language.length ? null : 'Choose at least one language.';
+    case 'religion':
+      return a.religion ? null : 'Choose one.';
     case 'dealbreakers':
       return null;
     case 'occupation': {

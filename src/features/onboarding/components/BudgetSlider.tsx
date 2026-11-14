@@ -8,13 +8,22 @@ import { formatRupees } from '@/utils/format';
 
 import { BUDGET } from '../options';
 
+type BudgetRange = { min: number; max: number; step: number; initial: number };
+
 type BudgetSliderProps = {
   value: number | null;
   onChange: (value: number) => void;
+  range?: BudgetRange;
+  accessibilityLabel?: string;
 };
 
-export function BudgetSlider({ value, onChange }: BudgetSliderProps) {
-  const current = value ?? BUDGET.initial;
+export function BudgetSlider({
+  value,
+  onChange,
+  range = BUDGET,
+  accessibilityLabel = 'Maximum monthly budget',
+}: BudgetSliderProps) {
+  const current = value ?? range.initial;
 
   return (
     <View>
@@ -26,22 +35,22 @@ export function BudgetSlider({ value, onChange }: BudgetSliderProps) {
       </Text>
       <Slider
         style={{ width: '100%', height: 48, marginTop: 24 }}
-        minimumValue={BUDGET.min}
-        maximumValue={BUDGET.max}
-        step={BUDGET.step}
+        minimumValue={range.min}
+        maximumValue={range.max}
+        step={range.step}
         value={current}
         onValueChange={onChange}
         minimumTrackTintColor={colors.brand}
         maximumTrackTintColor={colors['line-strong']}
         thumbTintColor={colors.brand}
-        accessibilityLabel="Maximum monthly budget"
+        accessibilityLabel={accessibilityLabel}
       />
       <View className="flex-row justify-between">
         <Text variant="caption" tone="subtle">
-          {formatRupees(BUDGET.min)}
+          {formatRupees(range.min)}
         </Text>
         <Text variant="caption" tone="subtle">
-          {formatRupees(BUDGET.max)}
+          {formatRupees(range.max)}
         </Text>
       </View>
     </View>

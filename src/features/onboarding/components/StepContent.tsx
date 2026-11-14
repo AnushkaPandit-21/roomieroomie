@@ -11,10 +11,12 @@ import {
   FOOD_OPTIONS,
   GENDER_OPTIONS,
   GUESTS_OPTIONS,
+  HOUSEHOLD_BUDGET,
   LANGUAGES,
   LIMITS,
   PETS_OPTIONS,
   PHOTO_LIMITS,
+  RELIGION_OPTIONS,
   ROOM_PHOTO_LIMITS,
   SEEKING_OPTIONS,
   SLEEP_OPTIONS,
@@ -51,6 +53,7 @@ const DEALBREAKER_ANSWERS: Record<DealbreakerField, (a: Answers) => string> = {
   sleep: (a) => labelFor(SLEEP_OPTIONS, a.sleep),
   guests: (a) => labelFor(GUESTS_OPTIONS, a.guests),
   pets: (a) => labelFor(PETS_OPTIONS, a.pets),
+  religion: (a) => labelFor(RELIGION_OPTIONS, a.religion),
 };
 
 export function StepContent({ step, answers: a, update, userId, data, refresh, onBusyChange }: StepContentProps) {
@@ -136,6 +139,15 @@ export function StepContent({ step, answers: a, update, userId, data, refresh, o
       );
     case 'max_budget':
       return <BudgetSlider value={a.max_budget} onChange={(max_budget) => update({ max_budget })} />;
+    case 'household_budget':
+      return (
+        <BudgetSlider
+          value={a.household_budget}
+          onChange={(household_budget) => update({ household_budget })}
+          range={HOUSEHOLD_BUDGET}
+          accessibilityLabel="Monthly household expenses budget"
+        />
+      );
     case 'move_in_date':
       return (
         <DateField
@@ -175,15 +187,31 @@ export function StepContent({ step, answers: a, update, userId, data, refresh, o
           onChange={(language) => update({ language })}
         />
       );
+    case 'religion':
+      return (
+        <OptionList
+          options={RELIGION_OPTIONS}
+          value={a.religion}
+          onChange={(religion) =>
+            // A religion dealbreaker needs a stated religion.
+            update({
+              religion,
+              ...(religion === 'prefer_not_to_say' ? { dealbreakers: a.dealbreakers.filter((d) => d !== 'religion') } : {}),
+            })
+          }
+        />
+      );
     case 'dealbreakers':
       return (
         <OptionList
           multiple
-          options={(Object.keys(DEALBREAKER_LABELS) as DealbreakerField[]).map((field) => ({
-            value: field,
-            label: DEALBREAKER_LABELS[field],
-            description: `Your answer: ${DEALBREAKER_ANSWERS[field](a)}`,
-          }))}
+          options={(Object.keys(DEALBREAKER_LABELS) as DealbreakerField[])
+            .filter((field) => field !== 'religion' || a.religion !== 'prefer_not_to_say')
+            .map((field) => ({
+              value: field,
+              label: DEALBREAKER_LABELS[field],
+              description: `Your answer: ${DEALBREAKER_ANSWERS[field](a)}`,
+            }))}
           value={a.dealbreakers}
           onChange={(dealbreakers) => update({ dealbreakers })}
         />

@@ -99,14 +99,14 @@ isOneToOne: false
                   ]
                 },"preferences": {
                   Row: {
-                    "cleanliness": number | null,"dealbreakers": (Database["public"]['Enums']["dealbreaker_field"])[],"drinking": Database["public"]['Enums']["habit_preference"] | null,"food": Database["public"]['Enums']["food_preference"] | null,"guests": Database["public"]['Enums']["guests_preference"] | null,"language": (string)[],"pets": Database["public"]['Enums']["pets_preference"] | null,"profile_id": string,"sleep": Database["public"]['Enums']["sleep_schedule"] | null,"smoking": Database["public"]['Enums']["habit_preference"] | null
+                    "cleanliness": number | null,"dealbreakers": (Database["public"]['Enums']["dealbreaker_field"])[],"drinking": Database["public"]['Enums']["habit_preference"] | null,"food": Database["public"]['Enums']["food_preference"] | null,"guests": Database["public"]['Enums']["guests_preference"] | null,"language": (string)[],"pets": Database["public"]['Enums']["pets_preference"] | null,"profile_id": string,"religion": Database["public"]['Enums']["religion"] | null,"sleep": Database["public"]['Enums']["sleep_schedule"] | null,"smoking": Database["public"]['Enums']["habit_preference"] | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "cleanliness"?: number | null,"dealbreakers"?: (Database["public"]['Enums']["dealbreaker_field"])[],"drinking"?: Database["public"]['Enums']["habit_preference"] | null,"food"?: Database["public"]['Enums']["food_preference"] | null,"guests"?: Database["public"]['Enums']["guests_preference"] | null,"language"?: (string)[],"pets"?: Database["public"]['Enums']["pets_preference"] | null,"profile_id": string,"sleep"?: Database["public"]['Enums']["sleep_schedule"] | null,"smoking"?: Database["public"]['Enums']["habit_preference"] | null
+                    "cleanliness"?: number | null,"dealbreakers"?: (Database["public"]['Enums']["dealbreaker_field"])[],"drinking"?: Database["public"]['Enums']["habit_preference"] | null,"food"?: Database["public"]['Enums']["food_preference"] | null,"guests"?: Database["public"]['Enums']["guests_preference"] | null,"language"?: (string)[],"pets"?: Database["public"]['Enums']["pets_preference"] | null,"profile_id": string,"religion"?: Database["public"]['Enums']["religion"] | null,"sleep"?: Database["public"]['Enums']["sleep_schedule"] | null,"smoking"?: Database["public"]['Enums']["habit_preference"] | null
                   }
                   Update: {
-                    "cleanliness"?: number | null,"dealbreakers"?: (Database["public"]['Enums']["dealbreaker_field"])[],"drinking"?: Database["public"]['Enums']["habit_preference"] | null,"food"?: Database["public"]['Enums']["food_preference"] | null,"guests"?: Database["public"]['Enums']["guests_preference"] | null,"language"?: (string)[],"pets"?: Database["public"]['Enums']["pets_preference"] | null,"profile_id"?: string,"sleep"?: Database["public"]['Enums']["sleep_schedule"] | null,"smoking"?: Database["public"]['Enums']["habit_preference"] | null
+                    "cleanliness"?: number | null,"dealbreakers"?: (Database["public"]['Enums']["dealbreaker_field"])[],"drinking"?: Database["public"]['Enums']["habit_preference"] | null,"food"?: Database["public"]['Enums']["food_preference"] | null,"guests"?: Database["public"]['Enums']["guests_preference"] | null,"language"?: (string)[],"pets"?: Database["public"]['Enums']["pets_preference"] | null,"profile_id"?: string,"religion"?: Database["public"]['Enums']["religion"] | null,"sleep"?: Database["public"]['Enums']["sleep_schedule"] | null,"smoking"?: Database["public"]['Enums']["habit_preference"] | null
                   }
                   Relationships: [
                     {
@@ -119,14 +119,14 @@ isOneToOne: true
                   ]
                 },"profiles": {
                   Row: {
-                    "areas": (string)[],"bio": string | null,"city": string | null,"dob": string,"gender": Database["public"]['Enums']["gender"] | null,"id": string,"is_paused": boolean,"last_active_at": string,"max_budget": number | null,"move_in_date": string | null,"name": string,"occupation": string | null,"seeking_type": Database["public"]['Enums']["seeking_type"] | null,"show_to_genders": (Database["public"]['Enums']["gender"])[],"want_genders": (Database["public"]['Enums']["gender"])[]
+                    "areas": (string)[],"bio": string | null,"city": string | null,"dob": string,"gender": Database["public"]['Enums']["gender"] | null,"household_budget": number | null,"id": string,"is_paused": boolean,"last_active_at": string,"max_budget": number | null,"move_in_date": string | null,"name": string,"occupation": string | null,"seeking_type": Database["public"]['Enums']["seeking_type"] | null,"show_to_genders": (Database["public"]['Enums']["gender"])[],"want_genders": (Database["public"]['Enums']["gender"])[]
                   }
                   ComputedFields: never
                   Insert: {
-                    "areas"?: (string)[],"bio"?: string | null,"city"?: string | null,"dob": string,"gender"?: Database["public"]['Enums']["gender"] | null,"id": string,"is_paused"?: boolean,"last_active_at"?: string,"max_budget"?: number | null,"move_in_date"?: string | null,"name": string,"occupation"?: string | null,"seeking_type"?: Database["public"]['Enums']["seeking_type"] | null,"show_to_genders"?: (Database["public"]['Enums']["gender"])[],"want_genders"?: (Database["public"]['Enums']["gender"])[]
+                    "areas"?: (string)[],"bio"?: string | null,"city"?: string | null,"dob": string,"gender"?: Database["public"]['Enums']["gender"] | null,"household_budget"?: number | null,"id": string,"is_paused"?: boolean,"last_active_at"?: string,"max_budget"?: number | null,"move_in_date"?: string | null,"name": string,"occupation"?: string | null,"seeking_type"?: Database["public"]['Enums']["seeking_type"] | null,"show_to_genders"?: (Database["public"]['Enums']["gender"])[],"want_genders"?: (Database["public"]['Enums']["gender"])[]
                   }
                   Update: {
-                    "areas"?: (string)[],"bio"?: string | null,"city"?: string | null,"dob"?: string,"gender"?: Database["public"]['Enums']["gender"] | null,"id"?: string,"is_paused"?: boolean,"last_active_at"?: string,"max_budget"?: number | null,"move_in_date"?: string | null,"name"?: string,"occupation"?: string | null,"seeking_type"?: Database["public"]['Enums']["seeking_type"] | null,"show_to_genders"?: (Database["public"]['Enums']["gender"])[],"want_genders"?: (Database["public"]['Enums']["gender"])[]
+                    "areas"?: (string)[],"bio"?: string | null,"city"?: string | null,"dob"?: string,"gender"?: Database["public"]['Enums']["gender"] | null,"household_budget"?: number | null,"id"?: string,"is_paused"?: boolean,"last_active_at"?: string,"max_budget"?: number | null,"move_in_date"?: string | null,"name"?: string,"occupation"?: string | null,"seeking_type"?: Database["public"]['Enums']["seeking_type"] | null,"show_to_genders"?: (Database["public"]['Enums']["gender"])[],"want_genders"?: (Database["public"]['Enums']["gender"])[]
                   }
                   Relationships: [
                     
@@ -231,7 +231,7 @@ isOneToOne: false
           Functions: {
             "get_feed":
 { Args: { "p_areas"?: (string)[],"p_cursor"?: string,"p_limit"?: number,"p_max_budget"?: number,"p_move_in_by"?: string,"p_user_id": string }; Returns: {
-              "age": number,"areas": (string)[],"bio": string,"city": string,"gender": Database["public"]['Enums']["gender"],"listing": Json,"match_score": number,"max_budget": number,"move_in_date": string,"name": string,"next_cursor": string,"occupation": string,"photos": Json,"preferences": Json,"profile_id": string,"prompts": Json,"rank_score": number,"seeking_type": Database["public"]['Enums']["seeking_type"]
+              "age": number,"areas": (string)[],"bio": string,"city": string,"gender": Database["public"]['Enums']["gender"],"household_budget": number,"listing": Json,"match_score": number,"max_budget": number,"move_in_date": string,"name": string,"next_cursor": string,"occupation": string,"photos": Json,"preferences": Json,"profile_id": string,"prompts": Json,"rank_score": number,"seeking_type": Database["public"]['Enums']["seeking_type"]
             }[]
                            },
 "touch_last_active":
@@ -239,7 +239,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "dealbreaker_field": "food"|"smoking"|"drinking"|"sleep"|"guests"|"pets","food_preference": "veg"|"non-veg"|"egg","gender": "male"|"female"|"non_binary","guests_preference": "never"|"sometimes"|"often","habit_preference": "no"|"okay"|"yes","pets_preference": "has_pets"|"okay"|"no_pets","report_type": "report"|"block","seeking_type": "need_place"|"have_place","sleep_schedule": "early"|"late","swipe_action": "like"|"pass"
+            "dealbreaker_field": "food"|"smoking"|"drinking"|"sleep"|"guests"|"pets"|"religion","food_preference": "veg"|"non-veg"|"egg","gender": "male"|"female"|"non_binary","guests_preference": "never"|"sometimes"|"often","habit_preference": "no"|"okay"|"yes","pets_preference": "has_pets"|"okay"|"no_pets","religion": "hindu"|"muslim"|"christian"|"sikh"|"jain"|"buddhist"|"parsi"|"other"|"prefer_not_to_say","report_type": "report"|"block","seeking_type": "need_place"|"have_place","sleep_schedule": "early"|"late","swipe_action": "like"|"pass"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -355,7 +355,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "dealbreaker_field": ["food", "smoking", "drinking", "sleep", "guests", "pets"],"food_preference": ["veg", "non-veg", "egg"],"gender": ["male", "female", "non_binary"],"guests_preference": ["never", "sometimes", "often"],"habit_preference": ["no", "okay", "yes"],"pets_preference": ["has_pets", "okay", "no_pets"],"report_type": ["report", "block"],"seeking_type": ["need_place", "have_place"],"sleep_schedule": ["early", "late"],"swipe_action": ["like", "pass"]
+            "dealbreaker_field": ["food", "smoking", "drinking", "sleep", "guests", "pets", "religion"],"food_preference": ["veg", "non-veg", "egg"],"gender": ["male", "female", "non_binary"],"guests_preference": ["never", "sometimes", "often"],"habit_preference": ["no", "okay", "yes"],"pets_preference": ["has_pets", "okay", "no_pets"],"religion": ["hindu", "muslim", "christian", "sikh", "jain", "buddhist", "parsi", "other", "prefer_not_to_say"],"report_type": ["report", "block"],"seeking_type": ["need_place", "have_place"],"sleep_schedule": ["early", "late"],"swipe_action": ["like", "pass"]
           }
         }
 } as const

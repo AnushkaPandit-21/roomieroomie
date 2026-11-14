@@ -14,5 +14,6 @@ export type HabitPreference = Enums['habit_preference'];
 export type GuestsPreference = Enums['guests_preference'];
 export type PetsPreference = Enums['pets_preference'];
 export type DealbreakerField = Enums['dealbreaker_field'];
+export type Religion = Enums['religion'];
 
 export type FeedProfile = Database['public']['Functions']['get_feed']['Returns'][number];

@@ -57,7 +57,7 @@ Five bottom tabs, mirroring Hinge's layout with Standouts swapped for Rooms: **D
 
 | Tab | What the user sees | Key actions |
 |---|---|---|
-| **Discover** | One profile at a time, scrolled vertically: photos interleaved with prompt answers and a lifestyle chip row (budget, area, veg/non-veg, smoking, drinking, move-in date), plus a match % | Heart a specific photo/prompt (optional comment), big X to cross, filter icon |
+| **Discover** | One profile at a time, scrolled vertically: photos interleaved with prompt answers and a lifestyle chip row (budget, area, veg/non-veg, smoking, drinking, move-in date; *+ household budget and religion, owner 2026-11-14*), plus a match % | Heart a specific photo/prompt (optional comment), big X to cross, filter icon |
 | **Rooms** | Hosts with a room available: room photos, rent, deposit, area, available-from, occupancy, plus host's mini profile | Filter by area/rent/date, "I'm interested" (counts as a like) |
 | **Likes You** | Grid/list of people who liked you, with the photo/prompt they liked and their comment | Open profile → Like back (instant match) or Cross |
 | **Matches** | Chat list sorted by latest message; new matches row on top | Chat, unmatch, report, block |
@@ -85,8 +85,8 @@ One question per screen, Hinge-style, **with a progress bar**. Exact order:
 5. Who can see you (`show_to_genders`, multi-select)
 6. City & preferred areas
 7. Seeking a place or have a place (`need_place` / `have_place`)
-8. Max budget & move-in date (budget slider)
-9. Lifestyle: food, smoking, drinking, sleep schedule, cleanliness, guests, pets, work/study
+8. Max budget & move-in date (budget slider) *(+ household-expenses budget screen, owner 2026-11-14)*
+9. Lifestyle: food, smoking, drinking, sleep schedule, cleanliness, guests, pets, work/study *(+ religion screen, owner 2026-11-14)*
 10. Mark dealbreakers
 11. Occupation
 12. 3–6 photos (photo picker requiring **at least 3**; compress to **1080px WebP** before upload)
@@ -145,8 +145,8 @@ Nine Postgres tables cover the whole MVP, plus `push_tokens`. **Every table has 
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `profiles` | `id` (= auth user), `name`, `dob`, `gender`, `want_genders[]`, `show_to_genders[]`, `city`, `areas[]`, `max_budget`, `move_in_date`, `seeking_type` (`need_place` / `have_place`), `occupation`, `bio`, `is_paused`, `last_active_at` | want/show_to are arrays of `male`, `female`, `non_binary` |
-| `preferences` | `profile_id`, `food` (veg/non-veg/egg), `smoking`, `drinking`, `sleep` (early/late), `cleanliness` (1–5), `guests`, `pets`, `language[]`, `dealbreakers[]` | dealbreakers = fields that must match exactly |
+| `profiles` | `id` (= auth user), `name`, `dob`, `gender`, `want_genders[]`, `show_to_genders[]`, `city`, `areas[]`, `max_budget`, `household_budget` *(2026-11-14)*, `move_in_date`, `seeking_type` (`need_place` / `have_place`), `occupation`, `bio`, `is_paused`, `last_active_at` | want/show_to are arrays of `male`, `female`, `non_binary` |
+| `preferences` | `profile_id`, `food` (veg/non-veg/egg), `smoking`, `drinking`, `sleep` (early/late), `cleanliness` (1–5), `guests`, `pets`, `language[]`, `religion` *(2026-11-14)*, `dealbreakers[]` | dealbreakers = fields that must match exactly |
 | `photos` | `id`, `profile_id`, `url`, `position`, `is_room_photo` | Require ≥ 3 non-room photos before profile goes live |
 | `prompts` | `id`, `profile_id`, `question`, `answer`, `position` | 3 per profile |
 | `listings` | `id`, `host_id`, `area`, `rent`, `deposit`, `available_from`, `occupancy`, `furnished`, `amenities[]`, room photos | Only for `have_place` users; feeds the Rooms tab |
@@ -336,7 +336,8 @@ src/
   components/profile/ProfileCard.tsx — reusable Hinge-style card (Discover, later Likes You / Matches)
 scripts/          e2e-onboarding.ts, e2e-discover.ts (+ e2e-helpers.ts) — end-to-end tests against the LOCAL stack (`npm run test:e2e`)
 supabase/
-  migrations/     8 re-runnable migrations (tables, indexes, private helpers, RLS, swipes/match trigger, get_feed, storage, realtime)
+  migrations/     re-runnable migrations (tables, indexes, private helpers, RLS, swipes/match trigger, get_feed, storage, realtime,
+                  feed filters, religion + household budget)
   seed/           dev_seed.sql (200 fake profiles, dev/local only) + cleanup_seed.sql
   tests/          pgTAP tests (database/*.test.sql) + shared fixtures.psql
   functions/send-sms/   Auth "Send SMS" hook — MSG91 or Twilio via SMS_PROVIDER
@@ -348,7 +349,7 @@ supabase/
 - Server-side helpers live in schema `private` (not exposed to the Data API). Client-callable functions go in `public` with explicit `grant execute ... to authenticated` and `revoke ... from anon`.
 - The Supabase client is typed: `SupabaseClient<Database>`.
 
-- Requires **Node.js ≥ 22.13** (SDK 58). Start: `npx expo start` → scan QR with Expo Go.
+- Requires **Node.js ≥ 22.13** (SDK 58). Start: **`npm run dev`** (add `-- -c` to clear the cache) → scan QR with Expo Go. It runs `expo start` with the dev server named `<wifi-ip>.nip.io`, because Supabase Auth rejects redirect URLs whose host is a bare IP, so Google sign-in can't return to Expo Go on a plain `npx expo start` (verified 2026-11-14). The phone must be on the same Wi-Fi.
 - Checks before declaring work done: `npx tsc --noEmit`, `npx expo-doctor`.
 - Styling: NativeWind **4.2.7** (latest stable) with Tailwind **3.4** (NativeWind 4 does not support Tailwind 4). Use design tokens, never raw hex values in components.
 - `src/app/design-system.tsx` is a dev-only preview (redirects to `/` in production builds); linked from Profile only when `__DEV__`.
@@ -394,7 +395,7 @@ _Record every owner-approved implementation decision here (date, decision, secti
   - Listing form: area from the city's list, rent (= rent share), deposit, available-from, occupancy chips 1–6, furnished yes/no, optional amenities. Room photos: 1–6 (minimum of 1 chosen by Claude — confirm).
   - SMS provider is configurable without app changes: Supabase Auth "Send SMS" hook → Edge Function `send-sms`, `SMS_PROVIDER=msg91|twilio`. Twilio may instead be set natively in Supabase Auth (no hook).
 - 2026-11-13 — **Login changed from phone OTP to Google sign-in (owner decision: SMS setup deferred).**
-  - Sign-in screen → "Continue with Google": Supabase OAuth in an in-app browser (`expo-web-browser`), works in Expo Go. Callback `auth/callback`; Supabase must allow redirect URLs `exp://**` (Expo Go) and `roomieroomie://**` (builds). `src/app/+native-intent.tsx` routes the callback to `/`.
+  - Sign-in screen → "Continue with Google": Supabase OAuth in an in-app browser (`expo-web-browser`), works in Expo Go. Callback `auth/callback`; Supabase must allow redirect URLs `exp://**`, `exps://**` (Expo Go) and `roomieroomie://**` (builds). In Expo Go, start with `npm run dev` (hostname instead of IP — see §14a); the return address is built from Expo Go's linking URI, and a deep-link listener finishes sign-in if the browser result is lost. Dev builds show a diagnostics line and a dev-only "Skip sign-in" (anonymous) button. `src/app/+native-intent.tsx` routes the callback to `/`.
   - Phone screens and OTP code removed from the app. The `send-sms` hook (MSG91/Twilio) is kept in `supabase/functions/` for when phone verification returns; phone auth is disabled in the local config.
   - Consequences vs the PDF: no verified phone numbers in v1 for now (§10); 18+ check unchanged (DOB step).
   - Profile tab has a Sign out button.
@@ -407,6 +408,17 @@ _Record every owner-approved implementation decision here (date, decision, secti
   - F5 `touch_last_active()` RPC called on app open / foreground, max once an hour; a trigger clamps `last_active_at` to ≤ now().
   - Card order: name/age/occupation + match % → photo 1 → lifestyle chips (budget/rent, area, food, smoking, drinking, move-in) → room panel (hosts) → prompt 1 → photos 2–3 → prompt 2 → photo 4 → prompt 3 → photos 5–6. Heart on every photo/prompt opens "Like with comment" (≤ 300 chars); floating ✕ bottom-left crosses.
   - Feed: 20 per page, next page fetched when ≤ 3 cards remain; like/pass remove the card instantly and restore it if the server rejects.
+- 2026-11-14 — **Religion and household-expenses budget added (owner request; additions beyond the PDF).** Migrations 10–11.
+  - Religion: `preferences.religion` enum (hindu, muslim, christian, sikh, jain, buddhist, parsi, other, prefer_not_to_say). Required onboarding screen after Languages. Shown as a card chip unless "Prefer not to say".
+  - Religion can be marked as a **dealbreaker** (`dealbreaker_field` gains `religion`): same stated religion only, checked both directions like D10; "Prefer not to say" never satisfies it and can't be marked as a dealbreaker (DB check constraint; choosing it removes the dealbreaker). Religion does **not** affect the match % (weights unchanged).
+  - Household budget: `profiles.household_budget` (₹/month, 0–100,000 in the DB). Required onboarding screen right after Max budget: "your monthly share of things like a maid, cook, electricity and WiFi". Slider ₹0–₹15,000, step ₹250 (PROVISIONAL). Shown as a card chip. **Display only**: no effect on filters or score.
+  - Both are required, so existing complete profiles are sent back to just these two screens on next open.
+  - `get_feed` returns `household_budget` and `preferences.religion`.
+- 2026-11-14 — **Plan for steps 6–10 approved; steps 6–9 built back-to-back** (one commit per step, phone test after 9).
+  - Auto-hide after **N = 3** reports from different people (hidden from Discover, Rooms and Likes You pending review).
+  - Rate limits (DB-enforced): messages **60/minute and 1,000/day** per sender; reports **20/day** per reporter.
+  - Photo moderation: **skipped for now** (revisit before launch; reports still work).
+  - Push (step 9) is built but only testable in a development build (Expo Go on Android has no remote push); Sign in with Apple and EAS builds wait for step 10 (needs Expo + Apple developer accounts).
 
 ## 16. Open questions (need owner input before the relevant step)
 - Logo (app icon and splash still use Expo's default images), and sign-off on the colours/fonts in §15.
@@ -414,12 +426,11 @@ _Record every owner-approved implementation decision here (date, decision, secti
 - Phone verification (PDF §10 "verified phone numbers"): bring back before launch, e.g. as a verification step after Google sign-in? If so: MSG91 (hook, needs DLT template) or Twilio.
 - iOS: App Store guideline 4.8 requires **Sign in with Apple** (or an equivalent privacy-focused option) when Google login is offered — needed before App Store submission.
 - Launch city (PDF example: Bengaluru).
-- N = number of reports before a user is auto-hidden (needed for the review flow; `reports_blocks` already has `created_at`).
-- Rate-limit numbers for messages and reports (§9 requires them; likes are done).
 - Photo moderation: which moderation API, or manual review at launch.
 - Recycle passes after 30 days: on or off (currently off).
 - Neighbouring areas for the area score (D5): add a reference table or keep shared-areas only.
 - `work/study` (PDF lifestyle list) is not collected — confirm occupation covers it. `bio` has no onboarding step (can be added in Profile edit).
 - Confirm room photos minimum (currently 1) and the budget slider range (currently ₹3,000–₹60,000, step ₹500).
+- Religion option list and the household-budget slider range (₹0–₹15,000) are PROVISIONAL (`options.ts`).
 - Prompt question bank for the 3 prompts — onboarding currently uses 8 PROVISIONAL questions (`src/features/onboarding/options.ts`).
 - City and area lists per city — onboarding currently uses PROVISIONAL lists (12 areas each for Bengaluru, Pune, Mumbai), also languages and amenities.

@@ -54,8 +54,16 @@ async function completeFlow(email: string, seeking: 'need_place' | 'have_place')
   ok(status.complete, 'profile is complete after the last step');
 
   // Saved to the right tables and columns.
-  ok(data.profile?.areas.join() === 'Koramangala,HSR Layout' && data.profile?.max_budget === 18000, 'profile columns saved');
-  ok(data.preferences?.language.length === 3 && data.preferences?.dealbreakers.join() === 'smoking', 'preferences saved');
+  ok(data.profile?.areas.join() === 'Koramangala,HSR Layout' && data.profile?.max_budget === 18000 && data.profile?.household_budget === 2500, 'profile columns saved');
+  ok(data.preferences?.language.length === 3 && data.preferences?.religion === 'jain' && data.preferences?.dealbreakers.join() === 'smoking,religion', 'preferences saved');
+
+  // "Prefer not to say" drops a religion dealbreaker (it needs a stated religion).
+  await saveStep(client, uid, 'religion', { ...answers, religion: 'prefer_not_to_say' }, data);
+  data = await loadOnboarding(client, uid);
+  ok(
+    data.preferences?.religion === 'prefer_not_to_say' && data.preferences?.dealbreakers.join() === 'smoking',
+    'prefer not to say removes the religion dealbreaker',
+  );
   ok(data.photos.filter((p) => !p.is_room_photo).length === 3, '3 profile photos stored');
   ok(data.photos.every((p) => p.url.startsWith(`${uid}/`) && p.url.endsWith('.webp')), 'photos stored as <uid>/<file>.webp');
   ok(data.prompts.length === 3, '3 prompts saved');

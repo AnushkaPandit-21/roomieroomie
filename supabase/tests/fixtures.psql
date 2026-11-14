@@ -14,7 +14,7 @@ begin
   values ('00000000-0000-0000-0000-000000000000', uid, 'authenticated', 'authenticated', '{"test": true}', '{}');
 
   insert into public.profiles (id, name, dob, gender, want_genders, show_to_genders, city, areas,
-    max_budget, move_in_date, seeking_type, is_paused, last_active_at)
+    max_budget, household_budget, move_in_date, seeking_type, is_paused, last_active_at)
   values (
     uid, label, (current_date - interval '25 years')::date,
     coalesce(attrs ->> 'gender', 'female')::public.gender,
@@ -23,13 +23,14 @@ begin
     coalesce(attrs ->> 'city', 'Testpur'),
     coalesce(attrs ->> 'areas', '{Koramangala,"HSR Layout"}')::text[],
     coalesce((attrs ->> 'budget')::integer, 15000),
+    coalesce((attrs ->> 'household')::integer, 2000),
     current_date + coalesce((attrs ->> 'move_in_offset')::integer, 10),
     coalesce(attrs ->> 'seeking', 'need_place')::public.seeking_type,
     coalesce((attrs ->> 'paused')::boolean, false),
     now() - make_interval(days => coalesce((attrs ->> 'inactive_days')::integer, 0))
   );
 
-  insert into public.preferences (profile_id, food, smoking, drinking, sleep, cleanliness, guests, pets, language, dealbreakers)
+  insert into public.preferences (profile_id, food, smoking, drinking, sleep, cleanliness, guests, pets, language, religion, dealbreakers)
   values (
     uid,
     coalesce(attrs ->> 'food', 'veg')::public.food_preference,
@@ -40,6 +41,7 @@ begin
     coalesce(attrs ->> 'guests', 'sometimes')::public.guests_preference,
     coalesce(attrs ->> 'pets', 'no_pets')::public.pets_preference,
     coalesce(attrs ->> 'language', '{English,Hindi}')::text[],
+    coalesce(attrs ->> 'religion', 'hindu')::public.religion,
     coalesce(attrs ->> 'dealbreakers', '{}')::public.dealbreaker_field[]
   );
 

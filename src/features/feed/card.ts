@@ -1,5 +1,5 @@
 import type { IconName } from '@/components/ui/Icon';
-import { FOOD_OPTIONS } from '@/features/onboarding/options';
+import { FOOD_OPTIONS, RELIGION_OPTIONS } from '@/features/onboarding/options';
 import { formatDisplayDate } from '@/utils/date';
 import { formatRupees } from '@/utils/format';
 
@@ -34,7 +34,8 @@ export function buildCardSections(profile: CardProfile): CardSection[] {
   ];
 }
 
-// Lifestyle chip row: budget, area, veg/non-veg, smoking, drinking, move-in date (CLAUDE.md §2).
+// Lifestyle chip row: budget, household budget, area, veg/non-veg, smoking, drinking, religion, move-in date
+// (CLAUDE.md §2; household budget and religion added 2026-11-14). Religion is hidden for "prefer not to say".
 export type LifestyleChip = { icon: IconName; label: string };
 
 export function lifestyleChips(profile: CardProfile): LifestyleChip[] {
@@ -42,6 +43,9 @@ export function lifestyleChips(profile: CardProfile): LifestyleChip[] {
   const chips: LifestyleChip[] = [];
   const budget = profile.listing?.rent ?? profile.maxBudget;
   if (budget != null) chips.push({ icon: 'wallet-outline', label: profile.listing ? `${formatRupees(budget)}/mo rent` : `Up to ${formatRupees(budget)}` });
+  if (profile.householdBudget != null) {
+    chips.push({ icon: 'home-outline', label: `Household ${formatRupees(profile.householdBudget)}/mo` });
+  }
   if (profile.areas.length) {
     chips.push({ icon: 'location-outline', label: profile.areas.length > 1 ? `${profile.areas[0]} +${profile.areas.length - 1}` : profile.areas[0] });
   }
@@ -51,6 +55,9 @@ export function lifestyleChips(profile: CardProfile): LifestyleChip[] {
   }
   if (p?.drinking) {
     chips.push({ icon: 'wine-outline', label: p.drinking === 'yes' ? 'Drinks' : p.drinking === 'okay' ? 'OK with drinking' : "Doesn't drink" });
+  }
+  if (p?.religion && p.religion !== 'prefer_not_to_say') {
+    chips.push({ icon: 'sparkles-outline', label: RELIGION_OPTIONS.find((o) => o.value === p.religion)?.label ?? p.religion });
   }
   if (profile.moveInDate) chips.push({ icon: 'calendar-outline', label: `Moves in ${formatDisplayDate(profile.moveInDate)}` });
   return chips;

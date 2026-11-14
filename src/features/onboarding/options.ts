@@ -5,6 +5,7 @@ import type {
   GuestsPreference,
   HabitPreference,
   PetsPreference,
+  Religion,
   SeekingType,
   SleepSchedule,
 } from '@/types/domain';
@@ -72,7 +73,20 @@ export const DEALBREAKER_LABELS: Record<DealbreakerField, string> = {
   sleep: 'Sleep schedule',
   guests: 'Guests',
   pets: 'Pets',
+  religion: 'Religion',
 };
+
+export const RELIGION_OPTIONS: Option<Religion>[] = [
+  { value: 'hindu', label: 'Hindu' },
+  { value: 'muslim', label: 'Muslim' },
+  { value: 'christian', label: 'Christian' },
+  { value: 'sikh', label: 'Sikh' },
+  { value: 'jain', label: 'Jain' },
+  { value: 'buddhist', label: 'Buddhist' },
+  { value: 'parsi', label: 'Parsi' },
+  { value: 'other', label: 'Other' },
+  { value: 'prefer_not_to_say', label: 'Prefer not to say', description: 'Not shown on your profile' },
+];
 
 // PROVISIONAL (CLAUDE.md §16): cities/areas, languages, prompts, amenities and the budget range are
 // placeholders until the owner supplies the final lists. Change them here only.
@@ -112,6 +126,8 @@ export const AMENITIES = ['WiFi', 'AC', 'Washing machine', 'Fridge', 'Geyser', '
   'Parking', 'Gym', 'Lift', 'Meals included', 'Balcony'];
 
 export const BUDGET = { min: 3000, max: 60000, step: 500, initial: 15000 } as const;
+// Monthly share of household costs (maid, cook, electricity, WiFi). PROVISIONAL range.
+export const HOUSEHOLD_BUDGET = { min: 0, max: 15000, step: 250, initial: 2000 } as const;
 
 export const PHOTO_LIMITS = { min: 3, max: 6 } as const;
 export const ROOM_PHOTO_LIMITS = { min: 1, max: 6 } as const;

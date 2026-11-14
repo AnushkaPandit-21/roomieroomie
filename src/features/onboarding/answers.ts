@@ -1,4 +1,4 @@
-import { BUDGET } from './options';
+import { BUDGET, HOUSEHOLD_BUDGET } from './options';
 import type { Answers, OnboardingData } from './types';
 
 export function emptyAnswers(): Answers {
@@ -12,6 +12,7 @@ export function emptyAnswers(): Answers {
     areas: [],
     seeking_type: null,
     max_budget: BUDGET.initial,
+    household_budget: HOUSEHOLD_BUDGET.initial,
     move_in_date: null,
     food: null,
     smoking: null,
@@ -21,6 +22,7 @@ export function emptyAnswers(): Answers {
     guests: null,
     pets: null,
     language: [],
+    religion: null,
     dealbreakers: [],
     occupation: '',
     prompts: [
@@ -54,6 +56,7 @@ export function answersFromData(data: OnboardingData): Answers {
     areas: p?.areas ?? base.areas,
     seeking_type: p?.seeking_type ?? base.seeking_type,
     max_budget: p?.max_budget ?? base.max_budget,
+    household_budget: p?.household_budget ?? base.household_budget,
     move_in_date: p?.move_in_date ?? base.move_in_date,
     food: pr?.food ?? base.food,
     smoking: pr?.smoking ?? base.smoking,
@@ -63,6 +66,7 @@ export function answersFromData(data: OnboardingData): Answers {
     guests: pr?.guests ?? base.guests,
     pets: pr?.pets ?? base.pets,
     language: pr?.language ?? base.language,
+    religion: pr?.religion ?? base.religion,
     dealbreakers: pr?.dealbreakers ?? base.dealbreakers,
     occupation: p?.occupation ?? base.occupation,
     prompts: base.prompts.map((empty, i) => {

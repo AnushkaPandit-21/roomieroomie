@@ -6,6 +6,7 @@ import type {
   GuestsPreference,
   HabitPreference,
   PetsPreference,
+  Religion,
   SeekingType,
   SleepSchedule,
 } from '@/types/domain';
@@ -50,6 +51,7 @@ export type Answers = {
   areas: string[];
   seeking_type: SeekingType | null;
   max_budget: number | null;
+  household_budget: number | null;
   move_in_date: string | null;
   food: FoodPreference | null;
   smoking: HabitPreference | null;
@@ -59,6 +61,7 @@ export type Answers = {
   guests: GuestsPreference | null;
   pets: PetsPreference | null;
   language: string[];
+  religion: Religion | null;
   dealbreakers: DealbreakerField[];
   occupation: string;
   prompts: PromptDraft[];

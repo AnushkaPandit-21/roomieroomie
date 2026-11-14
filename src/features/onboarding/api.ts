@@ -81,6 +81,8 @@ export async function saveStep(
       return;
     case 'max_budget':
       return updateProfile(client, userId, { max_budget: a.max_budget });
+    case 'household_budget':
+      return updateProfile(client, userId, { household_budget: a.household_budget });
     case 'move_in_date':
       return updateProfile(client, userId, { move_in_date: a.move_in_date });
     case 'food':
@@ -99,8 +101,15 @@ export async function saveStep(
       return upsertPreferences(client, userId, { pets: a.pets });
     case 'languages':
       return upsertPreferences(client, userId, { language: a.language });
+    case 'religion':
+      // A religion dealbreaker needs a stated religion, so drop it when the answer is "prefer not to say".
+      return upsertPreferences(client, userId, {
+        religion: a.religion,
+        ...(a.religion === 'prefer_not_to_say' ? { dealbreakers: a.dealbreakers.filter((d) => d !== 'religion') } : {}),
+      });
     case 'dealbreakers':
-      return upsertPreferences(client, userId, { dealbreakers: a.dealbreakers });
+      // Sent with religion: the upsert's insert row is checked against the religion-dealbreaker rule.
+      return upsertPreferences(client, userId, { dealbreakers: a.dealbreakers, religion: a.religion });
     case 'occupation':
       return updateProfile(client, userId, { occupation: a.occupation.trim() });
     case 'photos':

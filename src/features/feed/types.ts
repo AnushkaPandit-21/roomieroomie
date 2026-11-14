@@ -4,6 +4,7 @@ import type {
   GuestsPreference,
   HabitPreference,
   PetsPreference,
+  Religion,
   SeekingType,
   SleepSchedule,
 } from '@/types/domain';
@@ -32,6 +33,7 @@ export type CardPreferences = {
   guests: GuestsPreference | null;
   pets: PetsPreference | null;
   language: string[];
+  religion: Religion | null;
 };
 
 // One profile as shown on a ProfileCard (Discover now; Likes You / Matches later).
@@ -43,6 +45,7 @@ export type CardProfile = {
   city: string | null;
   areas: string[];
   maxBudget: number | null;
+  householdBudget: number | null;
   moveInDate: string | null;
   seekingType: SeekingType | null;
   occupation: string | null;
