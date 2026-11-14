@@ -1,5 +1,8 @@
 import { Tabs } from 'expo-router';
 
+import { useLikesYouCount } from '@/features/likes/useLikesYou';
+import { useSessionStore } from '@/stores/sessionStore';
+
 import { Icon, type IconName } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 
@@ -20,6 +23,10 @@ const TABS: TabConfig[] = [
 ];
 
 export default function TabsLayout() {
+  const userId = useSessionStore((s) => s.session?.user.id);
+  const likesCount = useLikesYouCount(userId).data ?? 0;
+  const badges: Record<string, number | undefined> = { 'likes-you': likesCount || undefined };
+
   return (
     <Tabs
       screenOptions={{
@@ -41,7 +48,9 @@ export default function TabsLayout() {
           name={tab.name}
           options={{
             title: tab.title,
-            tabBarAccessibilityLabel: tab.title,
+            tabBarAccessibilityLabel: badges[tab.name] ? `${tab.title}, ${badges[tab.name]} new` : tab.title,
+            tabBarBadge: badges[tab.name] && badges[tab.name]! > 99 ? '99+' : badges[tab.name],
+            tabBarBadgeStyle: { backgroundColor: colors.brand, color: colors['on-brand'], fontFamily: fonts['sans-medium'], fontSize: 11 },
             tabBarIcon: ({ focused }) => (
               <Icon name={focused ? tab.iconFocused : tab.icon} size={24} color={focused ? 'ink' : 'ink-subtle'} />
             ),

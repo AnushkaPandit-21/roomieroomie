@@ -82,6 +82,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
       </Stack.Protected>
       <Stack.Protected guard={signedIn && complete} redirectTo={signedIn ? '/onboarding' : '/sign-in'}>
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+        <Stack.Screen name="like/[id]" />
         <Stack.Screen name="design-system" options={{ presentation: 'modal' }} />
       </Stack.Protected>
     </Stack>

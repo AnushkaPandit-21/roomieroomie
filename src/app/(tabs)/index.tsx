@@ -6,7 +6,7 @@ import { EmptyState, Screen, ScreenHeader } from '@/components/layout';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { Button, IconButton, Text } from '@/components/ui';
 import { colors } from '@/constants/theme';
-import { isDailyLimitError } from '@/features/feed/api';
+import { DAILY_LIMIT_MESSAGE, isDailyLimitError } from '@/features/feed/api';
 import { FilterSheet } from '@/features/feed/components/FilterSheet';
 import { LikeSheet } from '@/features/feed/components/LikeSheet';
 import { MatchModal } from '@/features/feed/components/MatchModal';
@@ -17,8 +17,6 @@ import { useProfilePhotoUrls, usePrefetchProfilePhotos } from '@/hooks/usePhotoU
 import { friendlyError } from '@/services/errors';
 import { useFeedFilters } from '@/stores/feedFiltersStore';
 import { useSessionStore } from '@/stores/sessionStore';
-
-const LIMIT_MESSAGE = 'You’ve used today’s 25 likes. More at midnight.';
 
 export default function DiscoverScreen() {
   const userId = useSessionStore((s) => s.session?.user.id) as string;
@@ -37,7 +35,7 @@ export default function DiscoverScreen() {
   const { query, current, next, act } = useFeed(userId, filters, {
     onMatch: (profile) =>
       setMatch({ profile, photoUri: profile.photos[0] ? seenUrls.current[profile.photos[0].url] : undefined }),
-    onError: (error) => setNotice(isDailyLimitError(error) ? LIMIT_MESSAGE : friendlyError(error)),
+    onError: (error) => setNotice(isDailyLimitError(error) ? DAILY_LIMIT_MESSAGE : friendlyError(error)),
   });
 
   const photoUrls = useProfilePhotoUrls(current);

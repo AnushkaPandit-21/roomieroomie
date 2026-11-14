@@ -55,7 +55,7 @@ export function useFeed(userId: string, filters: FeedFilters, { onMatch, onError
       const client = getSupabase();
       if (a.kind === 'pass') {
         await sendPass(client, userId, a.profile.id);
-        return { matched: false };
+        return { matched: false, matchId: null };
       }
       return sendLike(client, userId, a.profile.id, { likedItemId: a.likedItemId, comment: a.comment });
     },

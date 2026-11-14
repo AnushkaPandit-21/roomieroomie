@@ -12,7 +12,15 @@ export const FEED_PAGE_SIZE = 20;
 
 export type FeedPage = { profiles: CardProfile[]; nextCursor: string | null };
 
-export function toCardProfile(row: FeedProfile): CardProfile {
+// Columns shared by every card-producing RPC (get_feed, get_likes_you, ...).
+export type CardSourceRow = Pick<
+  FeedProfile,
+  | 'profile_id' | 'name' | 'age' | 'gender' | 'city' | 'areas' | 'max_budget' | 'household_budget'
+  | 'move_in_date' | 'seeking_type' | 'occupation' | 'bio' | 'match_score'
+  | 'preferences' | 'photos' | 'prompts' | 'listing'
+>;
+
+export function toCardProfile(row: CardSourceRow): CardProfile {
   return {
     id: row.profile_id,
     name: row.name,
@@ -64,7 +72,7 @@ export async function sendLike(
   swiperId: string,
   targetId: string,
   options: { likedItemId?: string | null; comment?: string | null } = {},
-): Promise<{ matched: boolean }> {
+): Promise<{ matched: boolean; matchId: string | null }> {
   const comment = options.comment?.trim() || null;
   const { error } = await client.from('swipes').insert({
     swiper_id: swiperId,
@@ -82,7 +90,7 @@ export async function sendLike(
     .eq('user_b', swiperId < targetId ? targetId : swiperId)
     .maybeSingle();
   if (matchError) throw matchError;
-  return { matched: !!data };
+  return { matched: !!data, matchId: data?.id ?? null };
 }
 
 export async function sendPass(client: Client, swiperId: string, targetId: string): Promise<void> {
@@ -94,6 +102,8 @@ export async function touchLastActive(client: Client): Promise<void> {
   const { error } = await client.rpc('touch_last_active');
   if (error) throw error;
 }
+
+export const DAILY_LIMIT_MESSAGE = 'You’ve used today’s 25 likes. More at midnight.';
 
 export function isDailyLimitError(error: unknown): boolean {
   return /daily_like_limit_reached/.test((error as { message?: string } | null)?.message ?? '');

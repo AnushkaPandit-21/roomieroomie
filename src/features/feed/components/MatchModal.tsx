@@ -8,10 +8,13 @@ type MatchModalProps = {
   name: string | null;
   photoUri?: string;
   onClose: () => void;
+  // Opens the chat with the new match; without it the modal only offers to close.
+  onMessage?: () => void;
+  closeLabel?: string;
 };
 
-// Shown when a like completes a mutual like (F2). Chat comes in a later step.
-export function MatchModal({ name, photoUri, onClose }: MatchModalProps) {
+// Shown when a like completes a mutual like (F2).
+export function MatchModal({ name, photoUri, onClose, onMessage, closeLabel = 'Keep browsing' }: MatchModalProps) {
   return (
     <Modal visible={!!name} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: colors.scrim }}>
@@ -25,8 +28,9 @@ export function MatchModal({ name, photoUri, onClose }: MatchModalProps) {
           <Text tone="muted" align="center" style={{ marginTop: 8 }}>
             You and {name} liked each other. You’ll find them in Matches.
           </Text>
-          <View className="mt-6">
-            <Button label="Keep browsing" fullWidth onPress={onClose} />
+          <View className="mt-6 gap-3">
+            {onMessage ? <Button label="Send a message" leftIcon="chatbubble-outline" fullWidth onPress={onMessage} /> : null}
+            <Button label={closeLabel} variant={onMessage ? 'ghost' : 'primary'} fullWidth onPress={onClose} />
           </View>
         </Animated.View>
       </View>

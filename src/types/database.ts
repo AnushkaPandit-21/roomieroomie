@@ -234,6 +234,14 @@ isOneToOne: false
               "age": number,"areas": (string)[],"bio": string,"city": string,"gender": Database["public"]['Enums']["gender"],"household_budget": number,"listing": Json,"match_score": number,"max_budget": number,"move_in_date": string,"name": string,"next_cursor": string,"occupation": string,"photos": Json,"preferences": Json,"profile_id": string,"prompts": Json,"rank_score": number,"seeking_type": Database["public"]['Enums']["seeking_type"]
             }[]
                            },
+"get_likes_you":
+{ Args: { "p_cursor"?: string,"p_limit"?: number }; Returns: {
+              "age": number,"areas": (string)[],"bio": string,"city": string,"comment": string,"gender": Database["public"]['Enums']["gender"],"household_budget": number,"liked_at": string,"liked_item": string,"listing": Json,"match_score": number,"max_budget": number,"move_in_date": string,"name": string,"next_cursor": string,"occupation": string,"photos": Json,"preferences": Json,"profile_id": string,"prompts": Json,"seeking_type": Database["public"]['Enums']["seeking_type"]
+            }[]
+                           },
+"get_likes_you_count":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "touch_last_active":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            }

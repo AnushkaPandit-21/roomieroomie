@@ -34,3 +34,14 @@ export function usePrefetchProfilePhotos(profile: CardProfile | null) {
       .catch(() => undefined);
   }, [profile, queryClient]);
 }
+
+// Display URLs for any set of photo paths (e.g. first photos for a grid, or my own liked photo).
+export function useSignedPhotoUrls(paths: string[]) {
+  const unique = [...new Set(paths)].sort();
+  return useQuery({
+    queryKey: ['photo-urls', ...unique],
+    queryFn: () => signPhotoUrls(getSupabase(), unique),
+    enabled: unique.length > 0,
+    staleTime: 50 * 60 * 1000,
+  });
+}
