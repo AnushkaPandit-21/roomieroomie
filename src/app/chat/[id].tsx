@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'react-native';
 
 import { BackHeader, Screen } from '@/components/layout';
@@ -12,6 +12,7 @@ import { ActionSheet } from '@/features/safety/components/ActionSheet';
 import { ReportSheet } from '@/features/safety/components/ReportSheet';
 import { useSafetyAction } from '@/features/safety/useSafety';
 import { friendlyError } from '@/services/errors';
+import { useActiveChat } from '@/stores/activeChatStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { formatChatTime } from '@/utils/date';
 
@@ -77,6 +78,12 @@ export default function ChatScreen() {
   const [draft, setDraft] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
+
+  // Message notifications for this chat stay quiet while it's open.
+  useEffect(() => {
+    useActiveChat.getState().setMatchId(matchId);
+    return () => useActiveChat.getState().setMatchId(null);
+  }, [matchId]);
 
   const lastMineId = messages.find((m) => m.sender_id === userId)?.id;
   const viewProfile = () => profileId && router.push({ pathname: '/person/[id]', params: { id: profileId } });

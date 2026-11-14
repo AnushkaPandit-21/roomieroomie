@@ -13,6 +13,7 @@ import { LIMITS } from '@/features/onboarding/options';
 import type { RoomsPage } from '@/features/rooms/api';
 import { occupancyLabel } from '@/features/rooms/components/RoomCard';
 import { useSendInterest } from '@/features/rooms/useRooms';
+import { ProfileSafetyButton } from '@/features/safety/components/ProfileSafetyButton';
 import { useProfilePhotoUrls } from '@/hooks/usePhotoUrls';
 import { friendlyError } from '@/services/errors';
 import { useSessionStore } from '@/stores/sessionStore';
@@ -104,7 +105,11 @@ export default function RoomScreen() {
           <Text variant="label" tone="muted">
             Your host
           </Text>
-          <ProfileCard profile={host} photoUrls={urls} />
+          <ProfileCard
+            profile={host}
+            photoUrls={urls}
+            headerAction={<ProfileSafetyButton userId={userId} target={{ id: host.id, name: host.name }} onDone={() => router.back()} />}
+          />
         </ScrollView>
         <View className="absolute bottom-4 left-0 right-0">
           <Button label="I’m interested" leftIcon="heart" fullWidth loading={interest.isPending} onPress={() => setNoteOpen(true)} />

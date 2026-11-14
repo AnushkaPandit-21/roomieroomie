@@ -60,6 +60,39 @@ To seed a **dev** remote project (never production):
 Local stack: Google is off in `config.toml` (needs its own OAuth client with redirect
 `http://127.0.0.1:54321/auth/v1/callback`).
 
+## Push notifications and account deletion (step 9)
+
+Two Edge Functions: `push` (likes, matches, messages via Expo Push) and `delete-account`.
+
+1. Deploy both: `npx supabase functions deploy push` and `npx supabase functions deploy delete-account`
+   (`config.toml` sets `verify_jwt`: off for `push`, which uses a webhook secret; on for `delete-account`).
+2. Pick a long random webhook secret and give it to the function:
+   `npx supabase secrets set PUSH_WEBHOOK_SECRET=<secret>`
+3. In the SQL editor, tell the database where to send events (Vault keeps them encrypted):
+   ```sql
+   select vault.create_secret('https://<project-ref>.supabase.co/functions/v1/push', 'push_webhook_url');
+   select vault.create_secret('<same secret as step 2>', 'push_webhook_secret');
+   ```
+   Until these exist, the push triggers do nothing.
+4. Phones only receive pushes in a development or store build with an EAS project id (step 10).
+   Expo Go on Android has no remote push.
+
+Local testing: `npx supabase functions serve --env-file <file with PUSH_WEBHOOK_SECRET=...>`; the
+Vault URL for the local stack is `http://kong:8000/functions/v1/push`.
+
+## Reports and review
+
+Anyone reported by 3 different people is hidden from Discover, Rooms and Likes You until reviewed.
+In the SQL editor:
+```sql
+select * from private.pending_review;                       -- who is hidden, and why
+insert into private.report_reviews (profile_id, note)       -- clear someone after review
+values ('<profile id>', 'reviewed: ok')
+on conflict (profile_id) do update set cleared_at = now(), note = excluded.note;
+```
+To remove someone instead, delete their auth user (Authentication → Users); their rows cascade.
+Also delete their folder `<profile id>/` in Storage → photos (the in-app deletion does both).
+
 ## Phone login (paused)
 
 Phone OTP is disabled for now. The `functions/send-sms` hook (MSG91 or Twilio via `SMS_PROVIDER`) is kept

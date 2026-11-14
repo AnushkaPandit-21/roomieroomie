@@ -336,6 +336,7 @@ src/
   components/profile/ProfileCard.tsx — reusable Hinge-style card (Discover, Likes You, Rooms, Matches)
   features/chat/   api.ts (get_matches, messages, read receipts, unmatch, get_profile), useMatches.ts (+ inbox realtime), useChat.ts (realtime, typing, optimistic send)
   features/safety/ api.ts (report/block), useSafety.ts, components/ (ReportSheet, ActionSheet)
+  features/profile/ api.ts (pause, delete account), preview.ts (my card), summary.ts (Edit profile rows)
   features/rooms/  api.ts (get_rooms, sendInterest), useRooms.ts, components/RoomCard.tsx
   features/likes/  api.ts (get_likes_you), labels.ts (what of mine they liked), useLikesYou.ts (list, badge count, like back / cross)
 scripts/          e2e-onboarding.ts, e2e-discover.ts, e2e-social.ts (+ e2e-helpers.ts) — end-to-end tests against the LOCAL stack (`npm run test:e2e`)
@@ -344,7 +345,9 @@ supabase/
                   feed filters, religion + household budget)
   seed/           dev_seed.sql (200 fake profiles, dev/local only) + cleanup_seed.sql
   tests/          pgTAP tests (database/*.test.sql) + shared fixtures.psql
-  functions/send-sms/   Auth "Send SMS" hook — MSG91 or Twilio via SMS_PROVIDER
+  functions/send-sms/   Auth "Send SMS" hook — MSG91 or Twilio via SMS_PROVIDER (paused)
+  functions/push/       likes/matches/messages → Expo Push (called by DB webhook triggers)
+  functions/delete-account/  in-app account deletion (photos + auth user; rows cascade)
   README.md       how to apply via CLI or SQL editor
 ```
 
@@ -439,6 +442,14 @@ _Record every owner-approved implementation decision here (date, decision, secti
   - R4 "I'm interested" = a like on the host's first room photo with an optional note (≤ 300); same daily limit and match trigger. The host's Likes You shows "Interested in your room".
   - R5 Hosts see "Your listing" at the top of Rooms with **Edit listing** (`/listing/edit`: same form and room-photo rules as onboarding).
   - Room detail `/room/[id]`: room photos, rent, deposit, area, available-from, occupancy, furnishing, amenities, then the host's ProfileCard. Area only — never an address.
+- 2026-11-14 — **Notifications, safety, settings (§11 step 9) built.** Migration 15, Edge Functions `push` and `delete-account`.
+  - Auto-hide: reported by **3** different people since their last review ⇒ hidden from Discover, Rooms and Likes You (`private.is_auto_hidden`). Owner reviews in the SQL editor: `private.pending_review`; clear via `private.report_reviews` (private schema, not reachable by the app).
+  - Rate limits (triggers): messages 60/minute and 1,000/IST day per sender (`message_rate_limit_reached` / `message_daily_limit_reached`); reports 20/IST day (`report_daily_limit_reached`); blocks unlimited. Report/message timestamps are server time.
+  - Push: after-insert triggers on likes, matches and messages call `push` via pg_net (URL + secret in Vault: `push_webhook_url`, `push_webhook_secret`; no-op until set). Like → "Someone liked you" (no name; skipped if the like made a match); match → both "It's a match!"; message → sender name + first 80 chars; skipped if blocked/unmatched. Dead tokens are removed. The app hides a message alert for the chat that's open, and opens Likes You / the chat when a notification is tapped. Tokens are registered after sign-in (needs a real device + EAS project id; not Expo Go on Android) and removed on sign out.
+  - Report & block on every profile (… menu on Discover, Likes You, Rooms and profile view) and in chat.
+  - Profile tab: settings (edit profile, your listing, pause switch, notifications status, sign out, delete account) above a preview of your own card. Edit profile = every onboarding answer, edited with the same screen + validation (`/edit-profile/[step]`); switching to "I have a place" sends you through the listing steps.
+  - Delete account (`delete-account`, verify_jwt on): removes all photo files, then the auth user; every row cascades. Confirmed with an alert.
+  - Bio is still not editable: the approved card order has no bio section (§16).
 
 ## 16. Open questions (need owner input before the relevant step)
 - Logo (app icon and splash still use Expo's default images), and sign-off on the colours/fonts in §15.
@@ -449,7 +460,8 @@ _Record every owner-approved implementation decision here (date, decision, secti
 - Photo moderation: which moderation API, or manual review at launch.
 - Recycle passes after 30 days: on or off (currently off).
 - Neighbouring areas for the area score (D5): add a reference table or keep shared-areas only.
-- `work/study` (PDF lifestyle list) is not collected — confirm occupation covers it. `bio` has no onboarding step (can be added in Profile edit).
+- `work/study` (PDF lifestyle list) is not collected — confirm occupation covers it.
+- `bio`: no onboarding step, not on the approved card, not editable. Add it to the card (where?) and to Edit profile, or drop it.
 - Confirm room photos minimum (currently 1) and the budget slider range (currently ₹3,000–₹60,000, step ₹500).
 - Religion option list and the household-budget slider range (₹0–₹15,000) are PROVISIONAL (`options.ts`).
 - Prompt question bank for the 3 prompts — onboarding currently uses 8 PROVISIONAL questions (`src/features/onboarding/options.ts`).

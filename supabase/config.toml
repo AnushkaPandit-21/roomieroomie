@@ -445,3 +445,11 @@ enabled = true
 # Auth hooks are signed with SEND_SMS_HOOK_SECRET instead of a user JWT.
 [functions.send-sms]
 verify_jwt = false
+
+# Called by the database webhook triggers (pg_net) with x-webhook-secret, not a user JWT.
+[functions.push]
+verify_jwt = false
+
+# Called by the signed-in app; only ever deletes the caller's own account.
+[functions.delete-account]
+verify_jwt = true

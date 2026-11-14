@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
 import { Card, Chip, Icon, IconButton, Photo, Text } from '@/components/ui';
@@ -12,6 +13,8 @@ type ProfileCardProps = {
   photoUrls: Record<string, string>;
   // When provided, every photo and prompt gets a heart that likes that specific item.
   onLike?: (item: LikedItem) => void;
+  // Shown next to the match %, e.g. the report/block menu.
+  headerAction?: ReactNode;
 };
 
 function LikeHeart({ label, onPress }: { label: string; onPress: () => void }) {
@@ -83,7 +86,7 @@ function RoomPanel({ profile }: { profile: CardProfile }) {
 }
 
 // Hinge-style vertical profile: photos interleaved with prompts, lifestyle chips and the match %.
-export function ProfileCard({ profile, photoUrls, onLike }: ProfileCardProps) {
+export function ProfileCard({ profile, photoUrls, onLike, headerAction }: ProfileCardProps) {
   const sections = buildCardSections(profile);
 
   return (
@@ -95,13 +98,16 @@ export function ProfileCard({ profile, photoUrls, onLike }: ProfileCardProps) {
           </Text>
           {profile.occupation ? <Text tone="muted">{profile.occupation}</Text> : null}
         </View>
-        {profile.matchScore != null ? (
-          <View className="rounded-pill bg-brand-soft px-3 py-1.5" accessibilityLabel={`${profile.matchScore}% match`}>
-            <Text variant="label" tone="brand">
-              {profile.matchScore}% match
-            </Text>
-          </View>
-        ) : null}
+        <View className="flex-row items-center gap-1">
+          {profile.matchScore != null ? (
+            <View className="rounded-pill bg-brand-soft px-3 py-1.5" accessibilityLabel={`${profile.matchScore}% match`}>
+              <Text variant="label" tone="brand">
+                {profile.matchScore}% match
+              </Text>
+            </View>
+          ) : null}
+          {headerAction}
+        </View>
       </View>
 
       {sections.map((section, i) => {

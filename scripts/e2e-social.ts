@@ -16,11 +16,14 @@ import { sendLike, sendPass } from '../src/features/feed/api';
 import { fetchLikesYouCount, fetchLikesYouPage } from '../src/features/likes/api';
 import { likedItemLabel } from '../src/features/likes/labels';
 import { loadOnboarding } from '../src/features/onboarding/api';
+import { deleteAccount, setPaused } from '../src/features/profile/api';
 import { fetchRoomsPage, sendInterest } from '../src/features/rooms/api';
 import { blockUser, reportUser } from '../src/features/safety/api';
 import type { Answers, ListingDraft } from '../src/features/onboarding/types';
 
-import { completeProfile, deleteTestUser, ok, passedCount, scriptedAnswers, signIn } from './e2e-helpers';
+import { PHOTO_BUCKET } from '../src/services/photos';
+
+import { admin, completeProfile, deleteTestUser, ok, passedCount, scriptedAnswers, signIn, URL } from './e2e-helpers';
 
 // An isolated test city so seed data never appears.
 const CITY = 'Socialpur';
@@ -161,6 +164,51 @@ async function main() {
   );
   const deeBack = await sendLike(dee.client, dee.uid, eve.uid);
   ok(deeBack.matched, 'the host liking back creates a match');
+
+  console.log('\nPause, push, delete account');
+  await setPaused(eve.client, eve.uid, true);
+  await sendLike(eve.client, eve.uid, me.uid);
+  ok(!(await fetchLikesYouPage(me.client)).likes.some((l) => l.profile.id === eve.uid), 'a paused profile is hidden from Likes You');
+  ok((await fetchMatchesPage(eve.client)).matches.length === 1, 'pausing keeps existing matches');
+  await setPaused(eve.client, eve.uid, false);
+  ok((await fetchLikesYouPage(me.client)).likes.some((l) => l.profile.id === eve.uid), 'unpausing shows them again');
+
+  // The push Edge Function (run `npx supabase functions serve`), in dry-run mode: who gets what.
+  const pushSecret = process.env.PUSH_WEBHOOK_SECRET ?? 'local-test-secret';
+  const push = async (type: string, record: Record<string, unknown>) => {
+    const res = await fetch(`${URL}/functions/v1/push?dry=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-webhook-secret': pushSecret },
+      body: JSON.stringify({ type, record }),
+    });
+    if (!res.ok) throw new Error(`push function: HTTP ${res.status} ${await res.text()}`);
+    return (await res.json()) as { notifications: { id: string; title: string; body: string; data: Record<string, string> }[]; tokens: number };
+  };
+  await eve.client.from('push_tokens').insert({ profile_id: eve.uid, token: 'ExponentPushToken[e2e-eve]' });
+  const msgPush = await push('messages', { match_id: deeBack.matchId, sender_id: dee.uid, body: 'Saturday works!' });
+  ok(
+    msgPush.notifications.length === 1 && msgPush.notifications[0].id === eve.uid && msgPush.notifications[0].title === 'Dee' &&
+      msgPush.notifications[0].body === 'Saturday works!' && msgPush.tokens === 1,
+    'a new message notifies the other person, with sender name and text',
+  );
+  const matchPush = await push('matches', { id: deeBack.matchId, user_a: dee.uid < eve.uid ? dee.uid : eve.uid, user_b: dee.uid < eve.uid ? eve.uid : dee.uid });
+  ok(matchPush.notifications.length === 2 && matchPush.notifications.every((n) => n.title === 'It’s a match!'), 'a match notifies both people');
+  const likePush = await push('swipes', { action: 'like', swiper_id: eve.uid, target_id: me.uid });
+  ok(likePush.notifications.length === 1 && likePush.notifications[0].title === 'Someone liked you', 'a like notifies the person liked, without naming the liker');
+  const matchedLike = await push('swipes', { action: 'like', swiper_id: dee.uid, target_id: eve.uid });
+  ok(matchedLike.notifications.length === 0, 'a like that made a match sends only the match notification');
+  const unauthorized = await fetch(`${URL}/functions/v1/push`, { method: 'POST', headers: { 'x-webhook-secret': 'wrong' }, body: '{}' });
+  ok(unauthorized.status === 401, 'the push function rejects calls without the webhook secret');
+
+  // In-app account deletion removes the user, their rows and their photo files.
+  const evePhotosBefore = await admin.storage.from(PHOTO_BUCKET).list(eve.uid);
+  ok((evePhotosBefore.data?.length ?? 0) >= 3, 'the account to delete has photo files');
+  await deleteAccount(eve.client);
+  const { data: eveProfile } = await admin.from('profiles').select('id').eq('id', eve.uid).maybeSingle();
+  const evePhotosAfter = await admin.storage.from(PHOTO_BUCKET).list(eve.uid);
+  const { data: eveAuth } = await admin.auth.admin.getUserById(eve.uid);
+  ok(!eveProfile && (evePhotosAfter.data?.length ?? 0) === 0 && !eveAuth.user, 'delete account removes the profile, all photo files and the login');
+  ok((await fetchMatchesPage(dee.client)).matches.length === 0, 'their matches and chats disappear for others');
 
   for (const l of USERS) await deleteTestUser(email(l));
   console.log(`\nAll ${passedCount()} checks passed; test users removed.`);

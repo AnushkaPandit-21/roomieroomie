@@ -13,6 +13,7 @@ import { resolveMyItem } from '@/features/likes/labels';
 import type { IncomingLike } from '@/features/likes/types';
 import { useLikesYou, useRespondToLike } from '@/features/likes/useLikesYou';
 import { useOnboardingData } from '@/features/onboarding/useOnboardingData';
+import { ProfileSafetyButton } from '@/features/safety/components/ProfileSafetyButton';
 import { useProfilePhotoUrls, useSignedPhotoUrls } from '@/hooks/usePhotoUrls';
 import { friendlyError } from '@/services/errors';
 import { useSessionStore } from '@/stores/sessionStore';
@@ -110,7 +111,12 @@ export default function IncomingLikeScreen() {
       <View className="flex-1">
         <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 112 }} showsVerticalScrollIndicator={false}>
           <LikedBanner like={like} item={myItem} myPhotoUri={myItem?.kind === 'photo' || myItem?.kind === 'room' ? myPhoto.data?.[myItem.url] : undefined} />
-          <ProfileCard profile={profile} photoUrls={urls} onLike={setLiking} />
+          <ProfileCard
+            profile={profile}
+            photoUrls={urls}
+            onLike={setLiking}
+            headerAction={<ProfileSafetyButton userId={userId} target={{ id: profile.id, name: profile.name }} onDone={() => router.back()} />}
+          />
         </ScrollView>
         <View className="absolute bottom-4 left-0 right-0 flex-row items-center justify-between">
           <IconButton

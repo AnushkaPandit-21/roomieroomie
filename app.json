@@ -40,7 +40,13 @@
           "photosPermission": "RoomieRoomie needs access to your photos so you can add them to your profile."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "color": "#C2502E"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

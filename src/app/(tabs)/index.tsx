@@ -14,6 +14,7 @@ import { MatchModal } from '@/features/feed/components/MatchModal';
 import { hasActiveFilters, type CardProfile, type LikedItem } from '@/features/feed/types';
 import { useFeed } from '@/features/feed/useFeed';
 import { useOnboardingData } from '@/features/onboarding/useOnboardingData';
+import { ProfileSafetyButton } from '@/features/safety/components/ProfileSafetyButton';
 import { useProfilePhotoUrls, usePrefetchProfilePhotos } from '@/hooks/usePhotoUrls';
 import { friendlyError } from '@/services/errors';
 import { useFeedFilters } from '@/stores/feedFiltersStore';
@@ -118,7 +119,12 @@ export default function DiscoverScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View entering={FadeIn.duration(200)}>
-            <ProfileCard profile={current} photoUrls={urls} onLike={setLiking} />
+            <ProfileCard
+              profile={current}
+              photoUrls={urls}
+              onLike={setLiking}
+              headerAction={<ProfileSafetyButton userId={userId} target={{ id: current.id, name: current.name }} />}
+            />
           </Animated.View>
         </ScrollView>
         <View className="absolute bottom-4 left-0">

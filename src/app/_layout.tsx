@@ -18,6 +18,7 @@ import { getOnboardingStatus } from '@/features/onboarding/steps';
 import { useOnboardingData } from '@/features/onboarding/useOnboardingData';
 import { useAuthCallbackListener } from '@/hooks/useAuthCallbackListener';
 import { useAuthListener } from '@/hooks/useAuthListener';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useTouchLastActive } from '@/hooks/useTouchLastActive';
 import { queryClient } from '@/services/queryClient';
 import { useSessionStore } from '@/stores/sessionStore';
@@ -55,6 +56,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
 
   const signedIn = !!session;
   useTouchLastActive(signedIn && complete);
+  usePushNotifications(session?.user.id, signedIn && complete);
   const statusKnown = !signedIn || onboarding.isFetched;
   const ready = fontsReady && initialized && statusKnown;
 
@@ -87,6 +89,8 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="person/[id]" />
         <Stack.Screen name="room/[id]" />
         <Stack.Screen name="listing/edit" />
+        <Stack.Screen name="edit-profile/index" />
+        <Stack.Screen name="edit-profile/[step]" />
         <Stack.Screen name="design-system" options={{ presentation: 'modal' }} />
       </Stack.Protected>
     </Stack>

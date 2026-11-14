@@ -9,6 +9,9 @@ export function friendlyError(error: unknown): string {
   if (/network request failed|failed to fetch|fetch failed/i.test(message)) {
     return 'You seem to be offline. Check your connection and try again.';
   }
+  if (/message_rate_limit_reached/.test(message)) return 'You’re sending messages too fast. Wait a minute and try again.';
+  if (/message_daily_limit_reached/.test(message)) return 'You’ve reached today’s message limit. You can send more tomorrow.';
+  if (/report_daily_limit_reached/.test(message)) return 'You’ve sent a lot of reports today. Please try again tomorrow, or block this person.';
   // Dev-only setup hint from signInWithGoogle; shown as is.
   if (message.includes('npm run dev')) return message;
   if (/rate limit|too many/i.test(message)) {
