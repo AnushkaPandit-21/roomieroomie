@@ -57,14 +57,14 @@ Five bottom tabs, mirroring Hinge's layout with Standouts swapped for Rooms: **D
 
 | Tab | What the user sees | Key actions |
 |---|---|---|
-| **Discover** | One profile at a time, scrolled vertically: photos interleaved with prompt answers and a lifestyle chip row (budget, area, veg/non-veg, smoking, drinking, move-in date; *+ household budget and religion, owner 2026-11-14*), plus a match % | Heart a specific photo/prompt (optional comment), big X to cross, filter icon |
+| **Discover** | One profile at a time, scrolled vertically: photos interleaved with prompt answers and a lifestyle chip row (budget, area, veg/non-veg, smoking, drinking, move-in date; *+ household budget and religion, owner 2026-11-14*), plus a match % | Heart a specific photo/prompt (optional comment) *(owner change 2026-11-14: one ♥ button bottom-right, no comment — see §15)*, big X to cross, filter icon |
 | **Rooms** | Hosts with a room available: room photos, rent, deposit, area, available-from, occupancy, plus host's mini profile | Filter by area/rent/date, "I'm interested" (counts as a like) |
 | **Likes You** | Grid/list of people who liked you, with the photo/prompt they liked and their comment | Open profile → Like back (instant match) or Cross |
 | **Matches** | Chat list sorted by latest message; new matches row on top | Chat, unmatch, report, block |
 | **Profile** | Your profile preview, edit mode, preferences, settings | Edit photos/prompts/prefs, pause profile, delete account |
 
 ### Screen-level requirements (from the build plan)
-- **ProfileCard component:** vertical scroll of photos interleaved with prompts, a lifestyle chip row, and the match %. Each photo/prompt has a heart button that opens a "Like with comment" sheet. A floating X to cross.
+- **ProfileCard component:** vertical scroll of photos interleaved with prompts, a lifestyle chip row, and the match %. Each photo/prompt has a heart button that opens a "Like with comment" sheet. A floating X to cross. *(Owner change 2026-11-14: no per-item hearts; one floating ♥ bottom-right opposite the X — see §15.)*
 - **Discover:** uses `get_feed` with pagination and optimistic updates. Filter sheet (areas, budget, move-in).
 - **Likes You:** shows who liked me with the item they liked and their comment; tapping opens their full ProfileCard with Like back / Cross. Liking back must create the match via the trigger and show an **"It's a match"** screen.
 - **Matches:** new-matches row on top, conversations list below sorted by latest message with a **"Your turn"** badge.
@@ -450,6 +450,10 @@ _Record every owner-approved implementation decision here (date, decision, secti
   - Profile tab: settings (edit profile, your listing, pause switch, notifications status, sign out, delete account) above a preview of your own card. Edit profile = every onboarding answer, edited with the same screen + validation (`/edit-profile/[step]`); switching to "I have a place" sends you through the listing steps.
   - Delete account (`delete-account`, verify_jwt on): removes all photo files, then the auth user; every row cascades. Confirmed with an alert.
   - Bio is still not editable: the approved card order has no bio section (§16).
+- 2026-11-14 — **One like button instead of per-item likes (owner decision: "this is only to find roommates").** Supersedes the per-photo/prompt hearts and the "Like with comment" sheet (§2, F-card order note, step 6 like-back with comment).
+  - Discover: floating ♥ bottom-right, ✕ bottom-left; a tap likes immediately (no comment, no liked item). Likes You detail: ✕ and **Like back**. ProfileCard has no hearts anywhere.
+  - The schema is unchanged (`swipes.liked_item` / `comment` stay optional): "I'm interested" in Rooms still sends the room photo + optional note, and older likes still show what was liked.
+- 2026-11-14 — **Dev-only test likes (owner request).** Migration 16: `dev_seed_likes(p_count = 5)` makes up to N seed users (seed = true, D17) in my city like me, through the normal swipes path. No-op without seed data (production). Shown only in `__DEV__` as "Add test likes" on the Likes You tab, to test like back → Matches → chat.
 
 ## 16. Open questions (need owner input before the relevant step)
 - Logo (app icon and splash still use Expo's default images), and sign-off on the colours/fonts in §15.

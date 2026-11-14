@@ -1,55 +1,33 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
-import { Card, Chip, Icon, IconButton, Photo, Text } from '@/components/ui';
+import { Card, Chip, Icon, Photo, Text } from '@/components/ui';
 import { colors } from '@/constants/theme';
 import { buildCardSections, lifestyleChips } from '@/features/feed/card';
-import type { CardPhoto, CardPrompt, CardProfile, LikedItem } from '@/features/feed/types';
+import type { CardPrompt, CardProfile } from '@/features/feed/types';
 import { formatDisplayDate } from '@/utils/date';
 import { formatRupees } from '@/utils/format';
 
 type ProfileCardProps = {
   profile: CardProfile;
   photoUrls: Record<string, string>;
-  // When provided, every photo and prompt gets a heart that likes that specific item.
-  onLike?: (item: LikedItem) => void;
   // Shown next to the match %, e.g. the report/block menu.
   headerAction?: ReactNode;
 };
 
-function LikeHeart({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <IconButton icon="heart-outline" iconColor="brand" accessibilityLabel={label} variant="surface" floating onPress={onPress} />
-  );
+function PhotoSection({ uri, name }: { uri?: string; name: string }) {
+  return <Photo source={uri ? { uri } : undefined} accessibilityLabel={`Photo of ${name}`} />;
 }
 
-function PhotoSection({ photo, uri, name, onLike }: { photo: CardPhoto; uri?: string; name: string; onLike?: ProfileCardProps['onLike'] }) {
-  return (
-    <View>
-      <Photo source={uri ? { uri } : undefined} accessibilityLabel={`Photo of ${name}`} />
-      {onLike ? (
-        <View className="absolute bottom-3 right-3">
-          <LikeHeart label={`Like ${name}'s photo`} onPress={() => onLike({ kind: 'photo', photo })} />
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-function PromptSection({ prompt, name, onLike }: { prompt: CardPrompt; name: string; onLike?: ProfileCardProps['onLike'] }) {
+function PromptSection({ prompt }: { prompt: CardPrompt }) {
   return (
     <Card>
       <Text variant="label" tone="muted">
         {prompt.question}
       </Text>
-      <Text variant="heading" style={{ marginTop: 8, paddingRight: onLike ? 48 : 0 }}>
+      <Text variant="heading" style={{ marginTop: 8 }}>
         {prompt.answer}
       </Text>
-      {onLike ? (
-        <View className="absolute bottom-3 right-3">
-          <LikeHeart label={`Like ${name}'s answer: ${prompt.question}`} onPress={() => onLike({ kind: 'prompt', prompt })} />
-        </View>
-      ) : null}
     </Card>
   );
 }
@@ -86,7 +64,7 @@ function RoomPanel({ profile }: { profile: CardProfile }) {
 }
 
 // Hinge-style vertical profile: photos interleaved with prompts, lifestyle chips and the match %.
-export function ProfileCard({ profile, photoUrls, onLike, headerAction }: ProfileCardProps) {
+export function ProfileCard({ profile, photoUrls, headerAction }: ProfileCardProps) {
   const sections = buildCardSections(profile);
 
   return (
@@ -113,17 +91,9 @@ export function ProfileCard({ profile, photoUrls, onLike, headerAction }: Profil
       {sections.map((section, i) => {
         switch (section.type) {
           case 'photo':
-            return (
-              <PhotoSection
-                key={section.photo.id}
-                photo={section.photo}
-                uri={photoUrls[section.photo.url]}
-                name={profile.name}
-                onLike={onLike}
-              />
-            );
+            return <PhotoSection key={section.photo.id} uri={photoUrls[section.photo.url]} name={profile.name} />;
           case 'prompt':
-            return <PromptSection key={section.prompt.id} prompt={section.prompt} name={profile.name} onLike={onLike} />;
+            return <PromptSection key={section.prompt.id} prompt={section.prompt} />;
           case 'chips':
             return (
               <View key={`chips-${i}`} className="flex-row flex-wrap gap-2">
@@ -139,3 +109,4 @@ export function ProfileCard({ profile, photoUrls, onLike, headerAction }: Profil
     </View>
   );
 }
+

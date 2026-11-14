@@ -9,9 +9,8 @@ import { Button, IconButton, Text } from '@/components/ui';
 import { colors } from '@/constants/theme';
 import { DAILY_LIMIT_MESSAGE, isDailyLimitError } from '@/features/feed/api';
 import { FilterSheet } from '@/features/feed/components/FilterSheet';
-import { LikeSheet } from '@/features/feed/components/LikeSheet';
 import { MatchModal } from '@/features/feed/components/MatchModal';
-import { hasActiveFilters, type CardProfile, type LikedItem } from '@/features/feed/types';
+import { hasActiveFilters, type CardProfile } from '@/features/feed/types';
 import { useFeed } from '@/features/feed/useFeed';
 import { useOnboardingData } from '@/features/onboarding/useOnboardingData';
 import { ProfileSafetyButton } from '@/features/safety/components/ProfileSafetyButton';
@@ -27,7 +26,6 @@ export default function DiscoverScreen() {
   const setFilters = useFeedFilters((s) => s.setFilters);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [liking, setLiking] = useState<LikedItem | null>(null);
   const [match, setMatch] = useState<{ profile: CardProfile; matchId: string | null; photoUri?: string } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -122,12 +120,11 @@ export default function DiscoverScreen() {
             <ProfileCard
               profile={current}
               photoUrls={urls}
-              onLike={setLiking}
               headerAction={<ProfileSafetyButton userId={userId} target={{ id: current.id, name: current.name }} />}
             />
           </Animated.View>
         </ScrollView>
-        <View className="absolute bottom-4 left-0">
+        <View className="absolute bottom-4 left-0 right-0 flex-row justify-between">
           <IconButton
             icon="close"
             accessibilityLabel={`Cross ${current.name}`}
@@ -135,6 +132,14 @@ export default function DiscoverScreen() {
             size="lg"
             floating
             onPress={() => act({ kind: 'pass', profile: current })}
+          />
+          <IconButton
+            icon="heart"
+            accessibilityLabel={`Like ${current.name}`}
+            variant="brand"
+            size="lg"
+            floating
+            onPress={() => act({ kind: 'like', profile: current })}
           />
         </View>
       </View>
@@ -152,23 +157,6 @@ export default function DiscoverScreen() {
       ) : null}
       {body}
 
-      <LikeSheet
-        item={liking}
-        name={current?.name ?? ''}
-        photoUri={liking?.kind === 'photo' ? urls[liking.photo.url] : undefined}
-        onClose={() => setLiking(null)}
-        onSend={(comment) => {
-          if (current && liking) {
-            act({
-              kind: 'like',
-              profile: current,
-              likedItemId: liking.kind === 'photo' ? liking.photo.id : liking.prompt.id,
-              comment,
-            });
-          }
-          setLiking(null);
-        }}
-      />
       <FilterSheet
         visible={filtersOpen}
         city={city}

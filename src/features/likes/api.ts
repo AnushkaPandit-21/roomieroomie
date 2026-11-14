@@ -35,3 +35,11 @@ export async function fetchLikesYouCount(client: Client): Promise<number> {
   if (error) throw error;
   return data ?? 0;
 }
+
+// DEV ONLY: makes up to `count` test (seed) profiles in my city like me, to test Likes You -> chat.
+// Does nothing in a project without seed data.
+export async function devSeedLikes(client: Client, count = 5): Promise<number> {
+  const { data, error } = await client.rpc('dev_seed_likes', { p_count: count });
+  if (error) throw error;
+  return data ?? 0;
+}

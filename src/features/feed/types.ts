@@ -69,4 +69,3 @@ export function hasActiveFilters(f: FeedFilters): boolean {
   return f.areas.length > 0 || f.maxBudget != null || f.moveInBy != null;
 }
 
-export type LikedItem = { kind: 'photo'; photo: CardPhoto } | { kind: 'prompt'; prompt: CardPrompt };

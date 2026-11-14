@@ -1,16 +1,20 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, View } from 'react-native';
 
 import { EmptyState, Screen, ScreenHeader } from '@/components/layout';
 import { Button, Photo, Text } from '@/components/ui';
 import { colors } from '@/constants/theme';
 import { likedItemLabel } from '@/features/likes/labels';
 import type { IncomingLike } from '@/features/likes/types';
-import { useLikesYou } from '@/features/likes/useLikesYou';
+import { devSeedLikes } from '@/features/likes/api';
+import { likesYouCountKey, likesYouKey, useLikesYou } from '@/features/likes/useLikesYou';
 import { useOnboardingData } from '@/features/onboarding/useOnboardingData';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useSignedPhotoUrls } from '@/hooks/usePhotoUrls';
 import { friendlyError } from '@/services/errors';
+import { getSupabase } from '@/services/supabase';
 import { useSessionStore } from '@/stores/sessionStore';
 
 function LikeTile({ like, uri, label }: { like: IncomingLike; uri?: string; label: string }) {
@@ -48,6 +52,26 @@ export default function LikesYouScreen() {
   const mine = useOnboardingData(userId).data;
   const { query, likes } = useLikesYou(userId);
   const { gutter } = useResponsive();
+  const queryClient = useQueryClient();
+  const [seeding, setSeeding] = useState(false);
+
+  // DEV ONLY: a few test profiles like me, to try like back -> Matches -> chat.
+  const addTestLikes = async () => {
+    setSeeding(true);
+    try {
+      const n = await devSeedLikes(getSupabase(), 5);
+      await queryClient.invalidateQueries({ queryKey: likesYouKey(userId) });
+      await queryClient.invalidateQueries({ queryKey: likesYouCountKey(userId) });
+      if (n === 0) Alert.alert('No test likes added', 'There are no more test profiles in your city who haven’t liked you yet.');
+    } catch (e) {
+      Alert.alert('Couldn’t add test likes', friendlyError(e));
+    } finally {
+      setSeeding(false);
+    }
+  };
+  const devButton = __DEV__ ? (
+    <Button label="Add test likes" variant="outline" size="md" leftIcon="flask-outline" loading={seeding} onPress={addTestLikes} />
+  ) : undefined;
 
   const thumbs = useSignedPhotoUrls(likes.map((l) => l.profile.photos[0]?.url).filter(Boolean) as string[]);
   const urls = thumbs.data ?? {};
@@ -56,6 +80,7 @@ export default function LikesYouScreen() {
     <ScreenHeader
       title="Likes You"
       subtitle={likes.length ? 'Like back to match, or cross to dismiss.' : undefined}
+      right={devButton}
     />
   );
 

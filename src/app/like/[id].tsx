@@ -6,9 +6,7 @@ import { BackHeader, EmptyState, Screen } from '@/components/layout';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { Button, Card, IconButton, Photo, Text } from '@/components/ui';
 import { DAILY_LIMIT_MESSAGE, isDailyLimitError } from '@/features/feed/api';
-import { LikeSheet } from '@/features/feed/components/LikeSheet';
 import { MatchModal } from '@/features/feed/components/MatchModal';
-import type { LikedItem } from '@/features/feed/types';
 import { resolveMyItem } from '@/features/likes/labels';
 import type { IncomingLike } from '@/features/likes/types';
 import { useLikesYou, useRespondToLike } from '@/features/likes/useLikesYou';
@@ -70,7 +68,6 @@ export default function IncomingLikeScreen() {
 
   // Keep the like after answering removes it from the list, so the screen can show the match.
   const [like] = useState<IncomingLike | undefined>(() => likes.find((l) => l.profile.id === id));
-  const [liking, setLiking] = useState<LikedItem | null>(null);
   const [match, setMatch] = useState<{ matchId: string | null } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -93,9 +90,9 @@ export default function IncomingLikeScreen() {
   }
 
   const { profile } = like;
-  const likeBack = (likedItemId?: string, comment?: string) =>
+  const likeBack = () =>
     respond.mutate(
-      { kind: 'like', profile, likedItemId, comment },
+      { kind: 'like', profile },
       { onSuccess: (result) => !result.matched && router.back() },
     );
 
@@ -114,7 +111,6 @@ export default function IncomingLikeScreen() {
           <ProfileCard
             profile={profile}
             photoUrls={urls}
-            onLike={setLiking}
             headerAction={<ProfileSafetyButton userId={userId} target={{ id: profile.id, name: profile.name }} onDone={() => router.back()} />}
           />
         </ScrollView>
@@ -135,16 +131,6 @@ export default function IncomingLikeScreen() {
         </View>
       </View>
 
-      <LikeSheet
-        item={liking}
-        name={profile.name}
-        photoUri={liking?.kind === 'photo' ? urls[liking.photo.url] : undefined}
-        onClose={() => setLiking(null)}
-        onSend={(comment) => {
-          if (liking) likeBack(liking.kind === 'photo' ? liking.photo.id : liking.prompt.id, comment);
-          setLiking(null);
-        }}
-      />
       <MatchModal
         name={match ? profile.name : null}
         photoUri={profile.photos[0] ? urls[profile.photos[0].url] : undefined}
