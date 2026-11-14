@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 
+import { useInboxRealtime, useUnreadCount } from '@/features/chat/useMatches';
 import { useLikesYouCount } from '@/features/likes/useLikesYou';
 import { useSessionStore } from '@/stores/sessionStore';
 
@@ -25,7 +26,12 @@ const TABS: TabConfig[] = [
 export default function TabsLayout() {
   const userId = useSessionStore((s) => s.session?.user.id);
   const likesCount = useLikesYouCount(userId).data ?? 0;
-  const badges: Record<string, number | undefined> = { 'likes-you': likesCount || undefined };
+  const unreadCount = useUnreadCount(userId).data ?? 0;
+  useInboxRealtime(userId);
+  const badges: Record<string, number | undefined> = {
+    'likes-you': likesCount || undefined,
+    matches: unreadCount || undefined,
+  };
 
   return (
     <Tabs

@@ -242,6 +242,22 @@ isOneToOne: false
 "get_likes_you_count":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"get_matches":
+{ Args: { "p_cursor"?: string,"p_limit"?: number }; Returns: {
+              "activity_at": string,"age": number,"last_message": string,"last_message_at": string,"last_sender_id": string,"match_id": string,"matched_at": string,"name": string,"next_cursor": string,"photo_url": string,"profile_id": string,"unread_count": number,"your_turn": boolean
+            }[]
+                           },
+"get_profile":
+{ Args: { "p_profile_id": string }; Returns: {
+              "age": number,"areas": (string)[],"bio": string,"city": string,"gender": Database["public"]['Enums']["gender"],"household_budget": number,"listing": Json,"match_score": number,"max_budget": number,"move_in_date": string,"name": string,"occupation": string,"photos": Json,"preferences": Json,"profile_id": string,"prompts": Json,"seeking_type": Database["public"]['Enums']["seeking_type"]
+            }[]
+                           },
+"get_unread_count":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"mark_match_read":
+{ Args: { "p_match_id": string }; Returns: number
+                           },
 "touch_last_active":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            }

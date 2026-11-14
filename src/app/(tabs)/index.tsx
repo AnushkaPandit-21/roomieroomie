@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -26,15 +27,15 @@ export default function DiscoverScreen() {
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [liking, setLiking] = useState<LikedItem | null>(null);
-  const [match, setMatch] = useState<{ profile: CardProfile; photoUri?: string } | null>(null);
+  const [match, setMatch] = useState<{ profile: CardProfile; matchId: string | null; photoUri?: string } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   // Photo URLs of every card shown so far, so the match screen still has them after the card is gone.
   const seenUrls = useRef<Record<string, string>>({});
 
   const { query, current, next, act } = useFeed(userId, filters, {
-    onMatch: (profile) =>
-      setMatch({ profile, photoUri: profile.photos[0] ? seenUrls.current[profile.photos[0].url] : undefined }),
+    onMatch: (profile, matchId) =>
+      setMatch({ profile, matchId, photoUri: profile.photos[0] ? seenUrls.current[profile.photos[0].url] : undefined }),
     onError: (error) => setNotice(isDailyLimitError(error) ? DAILY_LIMIT_MESSAGE : friendlyError(error)),
   });
 
@@ -172,7 +173,20 @@ export default function DiscoverScreen() {
           setFiltersOpen(false);
         }}
       />
-      <MatchModal name={match?.profile.name ?? null} photoUri={match?.photoUri} onClose={() => setMatch(null)} />
+      <MatchModal
+        name={match?.profile.name ?? null}
+        photoUri={match?.photoUri}
+        onClose={() => setMatch(null)}
+        onMessage={
+          match?.matchId
+            ? () => {
+                const { matchId, profile } = match;
+                setMatch(null);
+                router.push({ pathname: '/chat/[id]', params: { id: matchId!, profileId: profile.id, name: profile.name } });
+              }
+            : undefined
+        }
+      />
     </Screen>
   );
 }

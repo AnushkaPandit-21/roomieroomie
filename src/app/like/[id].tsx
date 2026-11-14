@@ -141,6 +141,15 @@ export default function IncomingLikeScreen() {
           setMatch(null);
           router.back();
         }}
+        onMessage={
+          match?.matchId
+            ? () => {
+                const matchId = match.matchId!;
+                setMatch(null);
+                router.replace({ pathname: '/chat/[id]', params: { id: matchId, profileId: profile.id, name: profile.name } });
+              }
+            : undefined
+        }
       />
     </Screen>
   );

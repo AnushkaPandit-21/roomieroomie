@@ -334,6 +334,8 @@ src/
   features/feed/  api.ts (get_feed paging + filters, like/pass, match check), card.ts (section order, chips),
                   useFeed.ts (infinite query + optimistic like/pass), components/ (LikeSheet, FilterSheet, MatchModal)
   components/profile/ProfileCard.tsx — reusable Hinge-style card (Discover, Likes You, Rooms, Matches)
+  features/chat/   api.ts (get_matches, messages, read receipts, unmatch, get_profile), useMatches.ts (+ inbox realtime), useChat.ts (realtime, typing, optimistic send)
+  features/safety/ api.ts (report/block), useSafety.ts, components/ (ReportSheet, ActionSheet)
   features/likes/  api.ts (get_likes_you), labels.ts (what of mine they liked), useLikesYou.ts (list, badge count, like back / cross)
 scripts/          e2e-onboarding.ts, e2e-discover.ts, e2e-social.ts (+ e2e-helpers.ts) — end-to-end tests against the LOCAL stack (`npm run test:e2e`)
 supabase/
@@ -424,6 +426,11 @@ _Record every owner-approved implementation decision here (date, decision, secti
   - `get_likes_you(p_limit = 20, p_cursor)`: people who liked me and I haven't liked/crossed, newest first; excludes paused, incomplete, blocked/reported either way. Returns the card columns + `liked_item`, `comment`, `liked_at`; cursor = "liked_at|id". `get_likes_you_count()` drives the tab badge.
   - `private.match_score(a, b)` = get_feed's score for any pair (Likes You, Rooms, Matches); a pgTAP test asserts it equals get_feed's `match_score`. `private.profile_card(p)` = card JSON in get_feed's shape.
   - Likes You tab: 2-column grid (first photo, name/age, what they liked, comment). Tap → `/like/[id]`: "Liked your photo/answer" banner + their full ProfileCard; **Like back** (plain, or heart a photo/prompt with a comment) or ✕ Cross. Like-back counts toward the 25/day limit; a match shows "It's a match".
+- 2026-11-14 — **Matches + chat (§11 step 7) built.** Migration 13.
+  - `get_matches(p_limit = 30, p_cursor)`: active, unblocked matches with the other person, first photo, last message, unread count and `your_turn` (they sent last); ordered by latest activity (last message, else match time). New matches row = matches with no messages; conversations below. `get_unread_count()` drives the Matches badge.
+  - `mark_match_read(match_id)` sets `read_at` (server time) on the other person's messages when the chat is open. `messages.created_at` is forced to server time by trigger. `get_profile(id)` returns one card only if `can_view_profile` (D16).
+  - Chat `/chat/[id]`: last 30 messages, older on scroll, live inserts + read receipts via Realtime postgres_changes (RLS-filtered), typing indicator via Realtime broadcast on `match:<id>`, optimistic send with retry, "Sent/Read" under my last message. Safety tips card at the top of every conversation. Menu: view profile (`/person/[id]`), unmatch, report (reason list + details; also unmatches), block.
+  - "It's a match" now offers **Send a message**.
 
 ## 16. Open questions (need owner input before the relevant step)
 - Logo (app icon and splash still use Expo's default images), and sign-off on the colours/fonts in §15.

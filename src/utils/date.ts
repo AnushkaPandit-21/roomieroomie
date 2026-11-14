@@ -45,3 +45,14 @@ export function ageOn(dobISO: string, on: Date = startOfToday()): number {
 export function formatDisplayDate(value: string): string {
   return parseISODate(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
+
+// Compact timestamp for chat lists and bubbles: "10:42", "Yesterday", "Mon", "12 Nov".
+export function formatChatTime(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso);
+  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.floor((dayStart.getTime() - new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) / 864e5);
+  if (diffDays <= 0) return d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return d.toLocaleDateString('en-IN', { weekday: 'short' });
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}

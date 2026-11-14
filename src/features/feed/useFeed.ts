@@ -15,7 +15,7 @@ export type FeedAction =
   | { kind: 'like'; profile: CardProfile; likedItemId?: string | null; comment?: string | null };
 
 type Options = {
-  onMatch: (profile: CardProfile) => void;
+  onMatch: (profile: CardProfile, matchId: string | null) => void;
   onError: (error: unknown, action: FeedAction) => void;
 };
 
@@ -73,7 +73,7 @@ export function useFeed(userId: string, filters: FeedFilters, { onMatch, onError
       onError(error, a);
     },
     onSuccess: (result, a) => {
-      if (result.matched) onMatch(a.profile);
+      if (result.matched) onMatch(a.profile, result.matchId);
     },
   });
 
